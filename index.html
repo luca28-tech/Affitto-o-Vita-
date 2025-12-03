@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Affitto vs Pendolare</title>
+    <style>
+        /* --- IMPOSTAZIONI DI BASE E COLORI --- */
+        :root {
+            --primary: #2563eb;    /* Blu Elettrico */
+            --primary-dark: #1e40af;
+            --secondary: #10b981;  /* Verde Smeraldo */
+            --danger: #ef4444;     /* Rosso Allarme */
+            --bg-right: #f8fafc;   /* Grigio chiarissimo per lo sfondo destro */
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh; /* Occupa tutta l'altezza dello schermo */
+            display: flex; /* Attiva la modalità Split Screen */
+            overflow: hidden; /* Evita la doppia barra di scorrimento su PC */
+        }
+
+        /* --- LATO SINISTRO (IMMAGINE) --- */
+        .image-side {
+            flex: 1; /* Prende il 50% dello spazio disponibile */
+            /* Qui puoi cambiare l'immagine tra le virgolette */
+            background-image: url('https://www.fsnews.it/content/dam/fs_news/focus-2022/marzo/servizi/17_03_2022_FS_accordo_ADR_apertura.jpg'); 
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        /* Overlay scuro sopra l'immagine per renderla più elegante */
+        .image-side::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom right, rgba(30, 64, 175, 0.3), rgba(0, 0, 0, 0.6));
+        }
+
+        /* Testo opzionale sopra l'immagine */
+        .image-content {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            right: 50px;
+            color: white;
+            z-index: 2;
+        }
+        .image-content h2 {
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .image-content p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* --- LATO DESTRO (CALCOLATORE) --- */
+        .form-side {
+            flex: 1; /* Prende l'altro 50% */
+            background-color: var(--bg-right);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-y: auto; /* Permette di scorrere se il modulo è lungo */
+            padding: 40px 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08); /* Ombra morbida */
+            width: 100%;
+            max-width: 480px; /* Larghezza massima del modulo */
+        }
+
+        /* --- STILE DEL MODULO --- */
+        h1 {
+            text-align: center;
+            color: var(--text-main);
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .input-group { margin-bottom: 1.2rem; }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: normal;
+            margin-left: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* --- SEZIONE RISULTATI --- */
+        #results {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px dashed #e2e8f0;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .verdict {
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+        }
+
+        .comparison-bar { margin-bottom: 1.5rem; }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .bar-container {
+            height: 20px;
+            background-color: #f1f5f9;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .details {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .details ul { margin: 0; padding-left: 20px; }
+        .details li { margin-bottom: 5px; }
+
+        .hidden-cost {
+            color: var(--danger);
+            font-weight: 800;
+        }
+
+        /* --- RESPONSIVE (MOBILE) --- */
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column; /* Impila gli elementi invece di affiancarli */
+                height: auto; /* Permette lo scroll su mobile */
+                overflow: auto;
+            }
+            .image-side {
+                display: none; /* Nasconde l'immagine su mobile per risparmiare spazio */
+            }
+            .form-side {
+                padding: 20px 15px; /* Meno padding laterale su mobile */
+            }
+            .container {
+                box-shadow: none; /* Rimuove l'ombra per un look più piatto su mobile */
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="image-side">
+        <div class="image-content">
+            <h2>Non sprecare la tua vita in treno.</h2>
+            <p>Scopri se il risparmio sull'affitto vale davvero il tuo tempo libero.</p>
+        </div>
+    </div>
+
+    <div class="form-side">
+        <div class="container">
+            <h1>🏠 Città vs. Pendolare 🚆</h1>
+            <p class="subtitle">Inserisci i tuoi dati e scopri il costo reale delle tue scelte.</p>
+
+            <div class="input-group">
+                <label>🏢 Affitto in Città (€/mese)</label>
+                <input type="number" id="rentCity" placeholder="Es. 1200">
+            </div>
+
+            <div class="input-group">
+                <label>🏡 Affitto Fuori Città (€/mese)</label>
+                <input type="number" id="rentCommuter" placeholder="Es. 700">
+            </div>
+
+            <div class="input-group">
+                <label>🎫 Costo Trasporti (€/mese) <span class="hint">(Benzina/Treno)</span></label>
+                <input type="number" id="transportCost" placeholder="Es. 150">
+            </div>
+
+            <div class="input-group">
+                <label>⏱️ Tempo viaggio (minuti al giorno) <span class="hint">(Andata+Ritorno)</span></label>
+                <input type="number" id="travelTime" placeholder="Es. 90">
+            </div>
+
+            <div class="input-group">
+                <label>💎 Quanto vale 1 tua ora? (€)</label>
+                <input type="number" id="hourlyValue" placeholder="Es. 15 (la tua paga oraria)">
+            </div>
+
+            <button onclick="calculate()">Calcola la Verità</button>
+
+            <div id="results">
+                <div class="verdict" id="verdictText"></div>
+
+                <div class="comparison-bar">
+                    <div class="bar-label">
+                        <span>Vivere in Città</span>
+                        <span id="totalCityDisplay">0€</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill" id="barCity" style="width: 0%; background-color: var(--primary);"></div>
+                    </div>
+                </div>
+
+                <div class="comparison-bar">
+                    <div class="bar-label">
+                        <span>Vivere Fuori (Costo Reale)</span>
+                        <span id="totalCommuterDisplay">0€</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill" id="barCommuter" style="width: 0%; background-color: var(--secondary);"></div>
+                    </div>
+                </div>
+
+                <div class="details">
+                    <ul>
+                        <li>Giorni lavorativi calcolati: <strong>20 al mese</strong></li>
+                        <li>Ore perse in viaggio: <strong id="hoursLost">0</strong> ore/mese</li>
+                        <li style="margin-top:10px; border-top:1px solid #ddd; padding-top:10px;">
+                            Costo "invisibile" del tempo perso: <br>
+                            <span class="hidden-cost" id="hiddenCostDisplay">0€</span> al mese.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function calculate() {
+        // 1. Recupero Dati
+        const rentCity = parseFloat(document.getElementById('rentCity').value) || 0;
+        const rentCommuter = parseFloat(document.getElementById('rentCommuter').value) || 0;
+        const transportCost = parseFloat(document.getElementById('transportCost').value) || 0;
+        const travelTimeMinutes = parseFloat(document.getElementById('travelTime').value) || 0;
+        const hourlyValue = parseFloat(document.getElementById('hourlyValue').value) || 0;
+        
+        // Costanti
+        const workingDays = 20;
+
+        // 2. Calcoli
+        const totalCity = rentCity;
+        
+        // Calcolo ore perse al mese
+        const hoursLostMonth = (travelTimeMinutes / 60) * workingDays;
+        // Monetizzazione del tempo perso
+        const timeCost = hoursLostMonth * hourlyValue;
+        
+        const totalCommuter = rentCommuter + transportCost + timeCost;
+
+        // 3. Logica Output
+        const resultsDiv = document.getElementById('results');
+        const verdictText = document.getElementById('verdictText');
+        
+        resultsDiv.style.display = 'block';
+        
+        // Scroll verso i risultati (utile su mobile)
+        setTimeout(() => {
+             resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+
+        // Formattazione valuta
+        const fmt = (num) => num.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+        document.getElementById('totalCityDisplay').innerText = fmt(totalCity);
+        document.getElementById('totalCommuterDisplay').innerText = fmt(totalCommuter);
+        document.getElementById('hoursLost').innerText = hoursLostMonth.toFixed(1);
+        document.getElementById('hiddenCostDisplay').innerText = fmt(timeCost);
+
+        // Gestione Barre Grafiche
+        const maxVal = Math.max(totalCity, totalCommuter);
+        if(maxVal > 0){
+            document.getElementById('barCity').style.width = (totalCity / maxVal * 100) + '%';
+            document.getElementById('barCommuter').style.width = (totalCommuter / maxVal * 100) + '%';
+        }
+
+        // Il Verdetto
+        const diff = Math.abs(totalCity - totalCommuter);
+        
+        if (totalCommuter > totalCity) {
+            verdictText.innerText = `🛑 Ti conviene la CITTÀ. Vivere fuori ti costa ${fmt(diff)} in più (considerando il valore del tuo tempo).`;
+            verdictText.style.color = "#ef4444"; 
+            verdictText.style.backgroundColor = "#fef2f2";
+            verdictText.style.borderColor = "#fca5a5";
+            // Colore barra pendolare rosso se perde
+            document.getElementById('barCommuter').style.backgroundColor = "#ef4444";
+        } else {
+            verdictText.innerText = `✅ Ti conviene fare il PENDOLARE. Risparmi ${fmt(diff)} al mese (anche con lo stress del viaggio).`;
+            verdictText.style.color = "#10b981"; 
+            verdictText.style.backgroundColor = "#ecfdf5";
+            verdictText.style.borderColor = "#6ee7b7";
+            // Colore barra pendolare verde se vince
+            document.getElementById('barCommuter').style.backgroundColor = "#10b981";
+        }
+    }
+</script>
+
+</body>
+</html>

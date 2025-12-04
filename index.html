@@ -2,503 +2,712 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <meta name="theme-color" content="#0f172a">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affitto o Viaggio? - Calcolatore Nazionale</title>
-    <meta name="description" content="Calcolatore pendolari con copertura di tutte le province italiane.">
+    
+    <title>Calcolatore Pendolare vs Città | Analisi Costi Reali</title>
+    <meta name="description" content="Scopri se ti conviene vivere in città o fare il pendolare. Calcolatore con tratte italiane reali.">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 
     <style>
-        /* --- STILI BASE --- */
+        /* --- 1. DESIGN SYSTEM & DARK MODE --- */
         :root {
-            --primary: #2563eb; --primary-dark: #1e40af;
-            --secondary: #10b981; --danger: #ef4444;
-            --bg-right: #f8fafc; --card-bg: #ffffff;
-            --text-main: #1f2937; --text-muted: #6b7280;
-            --input-bg: #ffffff; --input-border: #e2e8f0;
-            --highlight-bg: #eff6ff; --highlight-border: #bfdbfe;
+            /* Colori Base (Light Mode) */
+            --primary: #0f172a;      
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #2563eb;       
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #f8fafc;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --overlay-bg: rgba(255, 255, 255, 0.90);
+            --modal-bg: #ffffff;
+            --highlight-bg: #eff6ff;
+            --highlight-border: #bfdbfe;
         }
 
+        /* Configurazione Dark Mode */
         [data-theme="dark"] {
-            --primary: #3b82f6; --primary-dark: #60a5fa;
-            --bg-right: #0f172a; --card-bg: #1e293b;
-            --text-main: #f1f5f9; --text-muted: #94a3b8;
-            --input-bg: #334155; --input-border: #475569;
-            --highlight-bg: #1e3a8a; --highlight-border: #1e40af;
+            --primary: #f1f5f9;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --border: #334155;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            --overlay-bg: rgba(15, 23, 42, 0.95);
+            --modal-bg: #1e293b;
+            --highlight-bg: #1e3a8a;
+            --highlight-border: #2563eb;
         }
 
-        * { box-sizing: border-box; }
-        
+        * { box-sizing: border-box; outline: none; }
+
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; padding: 0;
-            min-height: 100vh; display: flex; overflow-x: hidden; 
-            background-color: var(--bg-right); color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding-top: 70px;
+            line-height: 1.6;
+            min-height: 100vh;
+            background-color: var(--bg-body);
+            background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            /* In dark mode scurisci l'immagine di sfondo */
             transition: background-color 0.3s, color 0.3s;
         }
         
-        .image-side {
-            flex: 1; 
-            background-image: url('https://images.unsplash.com/photo-1474487548417-781cb714c2f0?q=80&w=2600&auto=format&fit=crop'); 
-            background-size: cover; background-position: center; position: relative;
+        [data-theme="dark"] body {
+            background-blend-mode: multiply;
+            background-color: #0f172a; /* Blend con l'immagine */
         }
-        .image-side::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(to bottom right, rgba(30, 64, 175, 0.4), rgba(0, 0, 0, 0.7));
-        }
-        .image-content { 
-            position: absolute; top: 50%; transform: translateY(-50%); 
-            left: 50px; right: 50px; color: white; z-index: 2; 
-        }
-        .image-content h2 { font-size: 2.8rem; margin: 0 0 15px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1.2; }
-        .image-content p { font-size: 1.3rem; opacity: 0.95; line-height: 1.5; }
-        
-        .form-side {
-            flex: 1; background-color: var(--bg-right);
-            display: flex; justify-content: center; align-items: center; 
-            padding: 40px 20px; transition: background-color 0.3s;
-        }
-        .container {
-            background-color: var(--card-bg); padding: 2.5rem; border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.08); width: 100%; max-width: 500px; 
-            transition: background-color 0.3s;
-        }
-        
-        .header-section { text-align: center; margin-bottom: 1.5rem; position: relative; }
-        h1 { color: var(--text-main); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; display: inline-block; }
-        p.subtitle { color: var(--text-muted); margin: 0; }
-        
-        .header-controls { position: absolute; top: 0; right: 0; display: flex; gap: 10px; }
-        .icon-btn {
-            background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);
-            width: 35px; height: 35px; border-radius: 50%; cursor: pointer;
-            display: flex; justify-content: center; align-items: center; font-size: 1.2rem;
-            transition: all 0.2s;
-        }
-        .icon-btn:hover { background: var(--highlight-bg); color: var(--primary); border-color: var(--primary); }
-        .logout-btn { display: none; }
 
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
-            z-index: 9999; display: none; 
-            justify-content: center; align-items: center; animation: fadeIn 0.3s ease-out;
+        /* --- 2. HEADER FISSO --- */
+        .navbar {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: var(--overlay-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000;
+            transition: 0.3s;
         }
-        .modal-content {
-            background: var(--card-bg); padding: 2rem; border-radius: 20px;
-            width: 90%; max-width: 400px; text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: slideUp 0.4s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .logo { font-weight: 900; font-size: 1.3rem; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+        
+        .nav-actions { display: flex; gap: 10px; align-items: center; }
 
-        .modal-input { 
-            width: 100%; padding: 15px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-main);
-            border-radius: 12px; font-size: 1.1rem; margin: 20px 0; text-align: center; 
+        .btn-icon { 
+            background: none; border: 1px solid var(--border); 
+            padding: 8px 12px; border-radius: 8px; 
+            color: var(--text-muted); cursor: pointer; transition: 0.2s; 
         }
-        
-        .highlight-box { background: var(--highlight-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--highlight-border); margin-bottom: 20px; }
-        .input-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
-        .hint { font-size: 0.8rem; color: var(--text-muted); font-weight: normal; }
-        input, select { 
-            width: 100%; padding: 12px; border: 2px solid var(--input-border); 
-            border-radius: 8px; font-size: 0.95rem; 
-            background-color: var(--input-bg); color: var(--text-main);
-        }
-        
-        button.main-btn { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 1.1rem; transition: background 0.3s; }
-        button.main-btn:hover { background-color: var(--primary-dark); }
-        
-        #results { margin-top: 2rem; padding-top: 1rem; border-top: 2px dashed var(--input-border); display: none; }
-        .verdict { font-weight: bold; text-align: center; margin-bottom: 1rem; padding: 15px; border-radius: 8px; font-size: 1.1rem; color: #1f2937; }
-        .bar-container { height: 20px; background-color: var(--input-border); border-radius: 20px; margin-bottom: 10px; overflow: hidden; }
-        .bar-fill { height: 100%; transition: width 1s; }
-        .bar-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; color: var(--text-main); }
-        
-        .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .action-btn {
-            flex: 1; padding: 12px; border: none; border-radius: 8px; 
-            font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
-            color: white; transition: transform 0.2s;
-        }
-        .action-btn:active { transform: scale(0.98); }
-        .btn-pdf { background-color: #64748b; }
-        .btn-whatsapp { background-color: #25D366; }
+        .btn-icon:hover { color: var(--accent); border-color: var(--accent); background: var(--bg-input); }
+        .logout-btn:hover { color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
 
-        .history-section { margin-top: 30px; border-top: 2px solid var(--input-border); padding-top: 20px; }
-        .history-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
-        .history-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
-        .history-item {
-            background: var(--input-bg); border: 1px solid var(--input-border); padding: 10px;
-            border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem;
-            display: flex; justify-content: space-between; align-items: center; color: var(--text-main);
+        /* --- 3. LAYOUT PRINCIPALE --- */
+        .main-layout {
+            max-width: 1200px; margin: 40px auto;
+            display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; padding: 20px;
         }
-        .history-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .badge-city { background: #fecaca; color: #991b1b; }
-        .badge-travel { background: #d1fae5; color: #065f46; }
-        .btn-small { padding: 5px 10px; font-size: 0.8rem; background: var(--text-muted); width: auto; margin: 0; color: white; border:none; border-radius:6px; cursor:pointer;}
 
+        /* --- CARD --- */
+        .card {
+            background: var(--bg-card); border-radius: 20px; padding: 35px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            transition: 0.3s;
+        }
+
+        h2 { font-size: 1.5rem; margin-bottom: 25px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        h2 i { color: var(--accent); }
+        h4 { color: var(--text-main); }
+
+        /* --- INPUT FORM --- */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; color: var(--text-main); }
+        
+        .input-wrapper { position: relative; }
+        .currency-symbol { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: bold; }
+        
+        input[type="number"], select, input[type="text"] {
+            width: 100%; padding: 14px 14px 14px 35px;
+            border: 2px solid var(--border); border-radius: 10px;
+            font-size: 1rem; transition: 0.2s; background: var(--bg-input); 
+            font-weight: 600; color: var(--text-main);
+        }
+        select { padding-left: 15px; cursor: pointer; }
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        input::placeholder { color: var(--text-muted); opacity: 0.5; }
+
+        /* Slider */
+        input[type="range"] { width: 100%; margin-top: 10px; accent-color: var(--accent); cursor: pointer; }
+
+        /* Smart Working Box */
+        .smart-working-box {
+            background: var(--highlight-bg); border: 2px solid var(--highlight-border); padding: 15px; border-radius: 10px;
+            display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;
+        }
+        .smart-working-box:hover { border-color: var(--accent); }
+        .smart-working-box input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+        /* Pulsante Principale */
+        .btn-main {
+            width: 100%; padding: 18px; background: var(--accent); color: white;
+            border: none; border-radius: 12px; font-weight: 800; font-size: 1.2rem;
+            cursor: pointer; transition: 0.2s; display: flex; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); margin-top: 20px;
+        }
+        .btn-main:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        /* --- RISULTATI --- */
+        #resultsArea { display: none; margin-top: 30px; border-top: 2px dashed var(--border); padding-top: 30px; }
+        
+        .verdict-box { text-align: center; padding: 30px; border-radius: 16px; margin-bottom: 30px; border: 2px solid transparent; }
+        .win-green { background: rgba(16, 185, 129, 0.1); color: #059669; border-color: #34d399; }
+        [data-theme="dark"] .win-green { background: rgba(5, 150, 105, 0.2); color: #6ee7b7; border-color: #059669; }
+
+        .win-red { background: rgba(239, 68, 68, 0.1); color: #b91c1c; border-color: #f87171; }
+        [data-theme="dark"] .win-red { background: rgba(185, 28, 28, 0.2); color: #fca5a5; border-color: #b91c1c; }
+
+        .big-number { font-size: 2.8rem; font-weight: 900; display: block; margin: 10px 0; }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .chart-box { background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .chart-full { grid-column: span 2; }
+
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-action { padding: 15px; border: 2px solid var(--border); background: var(--bg-card); color: var(--text-main); border-radius: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+        .btn-action:hover { background: var(--bg-input); border-color: var(--border); transform: translateY(-2px); }
+        .btn-wa { color: #16a34a; border-color: #86efac; background: rgba(22, 163, 74, 0.1); }
+        .btn-wa:hover { background: rgba(22, 163, 74, 0.2); }
+
+        /* --- POPUP --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 9999; display: none; justify-content: center; align-items: center; }
+        .modal-box { background: var(--modal-bg); padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); animation: popUp 0.3s ease-out; border: 1px solid var(--border); }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* --- MOBILE --- */
         @media (max-width: 900px) {
-            body { flex-direction: column; height: auto; overflow: auto; }
-            .image-side { display: none; } 
-            .form-side { padding: 20px 15px; }
-            .container { padding: 1.5rem; }
-            .header-controls { position: relative; justify-content: center; margin-bottom: 10px; top: auto; right: auto;}
+            .main-layout { grid-template-columns: 1fr; margin: 20px auto; padding: 10px; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-full { grid-column: span 1; }
         }
+
+        /* --- PDF NASCOSTO (Sempre Stile Light per stampa) --- */
+        #pdf-template { 
+            position: absolute; left: -9999px; top: 0; width: 210mm; 
+            background: white !important; 
+            color: #333 !important;
+            padding: 20mm; font-family: Helvetica, sans-serif; 
+        }
+        .pdf-header { text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+        .pdf-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #ddd; padding: 8px 0; font-size: 14px; color: #333; }
+        .pdf-box { flex:1; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid #e2e8f0; }
+        .pdf-title { color: #333; border-bottom:2px solid #2563eb; }
     </style>
 </head>
 <body>
 
-<div id="welcomeModal" class="modal-overlay">
-    <div class="modal-content">
-        <span class="modal-icon">👋</span>
-        <h2 style="margin:0; color:#1f2937;">Benvenuto!</h2>
-        <p style="color:#6b7280; margin-top:10px;">Come ti chiami? Personalizzeremo i calcoli.</p>
-        <input type="text" id="modalNameInput" class="modal-input" placeholder="Il tuo nome...">
-        <button class="main-btn" onclick="saveNameFromModal()">Inizia</button>
-        <span class="modal-skip" onclick="closeModal()">Salta per ora</span>
-        <div id="privacyText" style="font-size: 0.75rem; color: #64748b; margin-top: 20px; background: #f1f5f9; padding: 8px; border-radius: 6px;">
-            🔒 Verifica dispositivo...
-        </div>
-    </div>
-</div>
-
-<div class="image-side">
-    <div class="image-content">
-        <h2>Studente o Lavoratore?</h2>
-        <p>Il tempo è l'unica risorsa che non puoi guadagnare. Scopri quanto ti costa davvero fare il pendolare.</p>
-    </div>
-</div>
-
-<div class="form-side">
-    <div class="container" id="mainContainer">
-        <div class="header-section">
-            <div class="header-controls">
-                <button class="icon-btn" onclick="toggleTheme()" title="Cambia Tema">🌓</button>
-                <button id="logoutBtn" class="icon-btn logout-btn" onclick="logoutUser()" title="Esci">❌</button>
+    <div id="welcomeModal" class="modal-overlay">
+        <div class="modal-box">
+            <i class="fa-solid fa-hand-wave" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;"></i>
+            <h2 style="margin-top:0; justify-content:center;">Ciao!</h2>
+            <p style="color:var(--text-muted);">Come ti chiami? Personalizzeremo i calcoli per te.</p>
+            <div class="input-wrapper" style="margin-bottom: 20px;">
+                <input type="text" id="modalName" placeholder="Il tuo nome..." style="text-align:center; padding-left:15px;">
             </div>
-            <h1 id="pageTitle">🏠 Città vs. Pendolare 🚆</h1>
-            <p class="subtitle" id="pageSubtitle">Calcola risparmio in 30 secondi.</p>
+            <button class="btn-main" onclick="saveName()">Inizia</button>
         </div>
+    </div>
 
-        <div class="highlight-box">
-            <div class="input-group">
-                <label>👤 Chi sei?</label>
-                <select id="userType" onchange="updateProfile()">
-                    <option value="worker" selected>Lavoratore Full-Time</option>
-                    <option value="student">Studente Universitario</option>
-                    <option value="part">Lavoratore Part-Time</option>
-                    <option value="occasional">Viaggiatore Weekend</option>
-                    <option value="unemployed">In cerca di lavoro</option>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fa-solid fa-train-subway"></i> PendolareSmart<span style="color:var(--text-muted); font-size:0.8em">.it</span>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-icon" onclick="toggleTheme()" title="Cambia Tema">
+                <i class="fa-solid fa-moon" id="themeIcon"></i>
+            </button>
+            <span id="greeting" style="font-weight:600; display:none; color:var(--text-main);">Ciao</span>
+            <button class="btn-icon logout-btn" onclick="logout()" title="Esci"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        
+        <div class="card">
+            <h2><i class="fa-solid fa-sliders"></i> Configura Tratta</h2>
+            
+            <div class="form-group" style="background: var(--bg-input); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                <label style="color:var(--accent);">1. Dove lavori/studi? (Destinazione)</label>
+                <select id="hubCity" onchange="updateOrigins()" style="margin-bottom: 15px; background: var(--bg-card);">
+                    <option value="" disabled selected>-- Seleziona Città --</option>
+                    <option value="milano">Milano</option>
+                    <option value="roma">Roma</option>
+                    <option value="bologna">Bologna</option>
+                    <option value="torino">Torino</option>
+                    <option value="napoli">Napoli</option>
+                    <option value="firenze">Firenze</option>
+                    <option value="venezia">Venezia</option>
+                    <option value="bari">Bari</option>
+                </select>
+
+                <label style="color:var(--accent);">2. Da dove parti? (Origine)</label>
+                <select id="originCity" onchange="fillData()" disabled style="background: var(--border); opacity: 0.7;">
+                    <option value="">-- Scegli prima la destinazione --</option>
                 </select>
             </div>
-            <div class="input-group" style="margin-bottom: 0;">
-                <label>📅 Giorni di viaggio al mese</label>
-                <input type="number" id="daysPerMonth" value="20">
+
+            <hr style="border:0; border-top:1px solid var(--border); margin: 25px 0;">
+
+            <div class="form-group">
+                <label>Affitto a Destinazione (€/mese)</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">€</span>
+                    <input type="number" id="rentCity" placeholder="Es. 1200">
+                </div>
             </div>
-        </div>
 
-        <div class="input-group">
-            <label>📍 Dove lavori/studi?</label>
-            <select id="workCity" onchange="loadOrigins()">
-                <option value="" disabled selected>-- Seleziona Città Hub --</option>
-                <option value="milano">Milano (Lombardia)</option>
-                <option value="roma">Roma (Lazio)</option>
-                <option value="bologna">Bologna (Emilia)</option>
-                <option value="torino">Torino (Piemonte)</option>
-                <option value="napoli">Napoli (Campania)</option>
-                <option value="firenze">Firenze (Toscana)</option>
-                <option value="venezia">Venezia (Veneto)</option>
-                <option value="genova">Genova (Liguria)</option>
-                <option value="bari">Bari (Puglia)</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label>🏠 Da dove parti?</label>
-            <select id="homeCity" onchange="fillData()" disabled>
-                <option value="">-- Scegli prima la destinazione --</option>
-            </select>
-        </div>
-        
-        <hr style="border: 0; border-top: 1px solid var(--input-border); margin: 20px 0;">
-
-        <div class="input-group"><label>🏢 Affitto Destinazione (€)</label><input type="number" id="rentCity"></div>
-        <div class="input-group"><label>🏡 Affitto Partenza (€)</label><input type="number" id="rentHome"></div>
-        <div class="input-group"><label>🎫 Costo Viaggio (€)</label><input type="number" id="transportCost"></div>
-        <div class="input-group"><label>⏱️ Minuti A/R</label><input type="number" id="travelTime"></div>
-        <div class="input-group"><label>💎 Valore orario (€)</label><input type="number" id="hourlyValue" value="10"></div>
-
-        <button class="main-btn" onclick="calculate()">Calcola e Salva</button>
-
-        <div id="results">
-            <div class="verdict" id="verdictText"></div>
-            <div class="bar-label"><span>Vivere lì</span> <span id="valCity">0€</span></div>
-            <div class="bar-container"><div class="bar-fill" id="barCity" style="width:0%; background:var(--primary)"></div></div>
-            <div class="bar-label"><span>Viaggiare</span> <span id="valHome">0€</span></div>
-            <div class="bar-container"><div class="bar-fill" id="barHome" style="width:0%; background:var(--secondary)"></div></div>
-
-            <div class="action-buttons" data-html2canvas-ignore="true">
-                <button class="action-btn btn-whatsapp" onclick="shareWhatsapp()"><span>💬</span> WhatsApp</button>
-                <button class="action-btn btn-pdf" onclick="generatePDF()"><span>📄</span> PDF</button>
+            <div class="form-group">
+                <label>Affitto Pendolare/Casa (€/mese)</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">€</span>
+                    <input type="number" id="rentHome" placeholder="Es. 600">
+                </div>
             </div>
+
+            <div class="form-group">
+                <label>Costo Viaggio Mensile (Treno/Auto)</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">€</span>
+                    <input type="number" id="transportCost" placeholder="Auto-compilato">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Tempo Totale A+R (Minuti) <span id="timeDisplay" style="float:right; color:var(--accent)">90 min</span></label>
+                <input type="range" id="travelTime" min="0" max="300" step="5" value="90" oninput="document.getElementById('timeDisplay').innerText = this.value + ' min'">
+            </div>
+
+            <div class="form-group">
+                <label>Valore del tuo tempo (€/ora)</label>
+                <div class="input-wrapper">
+                    <span class="currency-symbol">€</span>
+                    <input type="number" id="hourlyValue" value="10">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="smart-working-box">
+                    <input type="checkbox" id="smartWorking">
+                    <div>
+                        <strong style="display:block; color:var(--text-main);">Smart Working in viaggio</strong>
+                        <span style="font-size:0.85rem; color:var(--text-muted);">Lavoro/studio in treno (Dimezza costo tempo)</span>
+                    </div>
+                </label>
+            </div>
+
+            <button class="btn-main" onclick="calculate()">
+                <i class="fa-solid fa-calculator"></i> Calcola Ora
+            </button>
         </div>
 
-        <div class="history-section" data-html2canvas-ignore="true">
-            <div class="history-title">
-                🕒 Cronologia
-                <button class="btn-small" onclick="clearHistory()">Pulisci</button>
+        <div class="card" id="resultsArea">
+            <div id="verdictBox" class="verdict-box" style="border: 2px dashed var(--border); padding: 40px; color: var(--text-muted);">
+                <i class="fa-solid fa-chart-simple" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>Inserisci i dati e premi Calcola per vedere i risultati.</p>
             </div>
-            <ul id="historyList" class="history-list">
-                <li style="color:var(--text-muted); text-align:center; padding:10px;">Nessun calcolo recente.</li>
-            </ul>
+
+            <div id="chartsArea" style="display:none;">
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <h4>Città</h4>
+                        <canvas id="cityChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Pendolare</h4>
+                        <canvas id="homeChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-box chart-full" style="margin-bottom: 20px;">
+                    <h4>Proiezione Risparmio (5 Anni)</h4>
+                    <canvas id="lineChart" height="200"></canvas>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-action btn-wa" onclick="shareWa()"><i class="fa-brands fa-whatsapp"></i> Condividi</button>
+                    <button class="btn-action" onclick="makePDF()"><i class="fa-solid fa-file-pdf"></i> Scarica PDF</button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+
+    <div id="pdf-template">
+        <div class="pdf-header">
+            <h1 style="color:#2563eb; margin:0;">Report Pendolare</h1>
+            <p style="color:#666;">Generato per <span id="pdfUser"></span> il <span id="pdfDate"></span></p>
+        </div>
+        
+        <div id="pdfVerdict" style="text-align:center; padding:20px; border-radius:10px; margin-bottom:30px; font-weight:bold; font-size:18px; border: 1px solid #ccc;"></div>
+
+        <div style="display:flex; gap:30px;">
+            <div class="pdf-box">
+                <h3 class="pdf-title">🏠 Città</h3>
+                <div class="pdf-row"><span>Affitto:</span><strong id="pdfRentCity"></strong></div>
+                <div class="pdf-row" style="font-size:16px; border-top:2px solid #333; margin-top:10px; color:#000;"><span>TOTALE:</span><strong id="pdfTotCity"></strong></div>
+            </div>
+            <div class="pdf-box">
+                <h3 class="pdf-title">🚆 Pendolare</h3>
+                <div class="pdf-row"><span>Affitto:</span><strong id="pdfRentHome"></strong></div>
+                <div class="pdf-row"><span>Viaggio:</span><strong id="pdfTrans"></strong></div>
+                <div class="pdf-row"><span>Tempo Perso:</span><strong id="pdfTime"></strong></div>
+                <div class="pdf-row" style="font-size:16px; border-top:2px solid #333; margin-top:10px; color:#000;"><span>TOTALE:</span><strong id="pdfTotHome"></strong></div>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-top:30px;">
+            <h4>Proiezione 5 Anni</h4>
+            <img id="pdfChartImg" style="width:100%; max-width:600px;">
+        </div>
+    </div>
 
 <script>
-    // --- GESTIONE APP ---
-    function toggleTheme() {
-        const body = document.body;
-        const current = body.getAttribute("data-theme");
-        if (current === "dark") { body.removeAttribute("data-theme"); localStorage.setItem("theme", "light"); }
-        else { body.setAttribute("data-theme", "dark"); localStorage.setItem("theme", "dark"); }
-    }
-
-    window.onload = function() {
-        if (localStorage.getItem("theme") === "dark") document.body.setAttribute("data-theme", "dark");
-        
-        const privacyText = document.getElementById('privacyText');
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-        privacyText.innerHTML = isMobile ? "🔒 Sicuro: Dati salvati su questo Telefono." : "🔒 Sicuro: Dati salvati su questo PC.";
-
-        const storedName = localStorage.getItem('userName');
-        if (!storedName) { document.getElementById('welcomeModal').style.display = 'flex'; }
-        else { personalizeUI(storedName); }
-        loadHistory(); 
-    };
-
-    function saveNameFromModal() {
-        const name = document.getElementById('modalNameInput').value;
-        if (name.trim()) { localStorage.setItem('userName', name); personalizeUI(name); closeModal(); }
-        else { alert("Inserisci un nome."); }
-    }
-    function closeModal() { document.getElementById('welcomeModal').style.display = 'none'; }
-    function personalizeUI(name) {
-        document.getElementById('pageTitle').innerText = "Ciao, " + name + "! 👋";
-        document.getElementById('logoutBtn').style.display = "flex";
-    }
-    function logoutUser() {
-        if(confirm("Vuoi uscire?")) { localStorage.removeItem('userName'); localStorage.removeItem('calcHistory'); location.reload(); }
-    }
-
-    // --- MEGA DATABASE PROVINCE ITALIANE (Stime 2025) ---
-    // Struttura: Hub -> Province Collegate
-    const routes = {
-        milano: {
+    // --- DATABASE TRATTE (HUB -> PROVINCE) ---
+    const database = {
+        "milano": {
             rent: 1350,
-            origins: {
-                varese: { name: "Varese", cost: 75, time: 110, rent: 700 },
-                como: { name: "Como", cost: 70, time: 90, rent: 750 },
-                lecco: { name: "Lecco", cost: 70, time: 100, rent: 650 },
-                sondrio: { name: "Sondrio", cost: 95, time: 240, rent: 550 },
-                bergamo: { name: "Bergamo", cost: 65, time: 100, rent: 700 },
-                brescia: { name: "Brescia", cost: 105, time: 120, rent: 650 },
-                pavia: { name: "Pavia", cost: 60, time: 70, rent: 650 },
-                lodi: { name: "Lodi", cost: 55, time: 60, rent: 650 },
-                cremona: { name: "Cremona", cost: 85, time: 130, rent: 550 },
-                mantova: { name: "Mantova", cost: 95, time: 240, rent: 500 },
-                monza: { name: "Monza", cost: 40, time: 30, rent: 850 },
-                novara: { name: "Novara (PIE)", cost: 75, time: 90, rent: 600 },
-                piacenza: { name: "Piacenza (EMI)", cost: 85, time: 100, rent: 550 }
-            }
+            destinations: [
+                {name: "Monza", rent: 850, cost: 40, time: 30},
+                {name: "Pavia", rent: 700, cost: 60, time: 60},
+                {name: "Como", rent: 750, cost: 70, time: 90},
+                {name: "Bergamo", rent: 700, cost: 65, time: 100},
+                {name: "Varese", rent: 700, cost: 75, time: 110},
+                {name: "Lodi", rent: 650, cost: 55, time: 60},
+                {name: "Novara", rent: 600, cost: 75, time: 90},
+                {name: "Brescia", rent: 650, cost: 105, time: 120},
+                {name: "Piacenza", rent: 550, cost: 85, time: 100},
+                {name: "Lecco", rent: 650, cost: 70, time: 100},
+                {name: "Cremona", rent: 550, cost: 85, time: 130}
+            ]
         },
-        roma: {
+        "roma": {
             rent: 1150,
-            origins: {
-                viterbo: { name: "Viterbo", cost: 70, time: 160, rent: 500 },
-                rieti: { name: "Rieti", cost: 65, time: 180, rent: 450 },
-                latina: { name: "Latina", cost: 60, time: 90, rent: 600 },
-                frosinone: { name: "Frosinone", cost: 75, time: 130, rent: 500 },
-                civitavecchia: { name: "Civitavecchia (RM)", cost: 70, time: 110, rent: 650 },
-                tivoli: { name: "Tivoli (RM)", cost: 45, time: 70, rent: 600 },
-                guidonia: { name: "Guidonia (RM)", cost: 45, time: 60, rent: 550 },
-                anzio: { name: "Anzio/Nettuno (RM)", cost: 55, time: 140, rent: 550 }
-            }
+            destinations: [
+                {name: "Latina", rent: 600, cost: 60, time: 90},
+                {name: "Viterbo", rent: 500, cost: 70, time: 150},
+                {name: "Frosinone", rent: 500, cost: 75, time: 130},
+                {name: "Tivoli", rent: 600, cost: 45, time: 70},
+                {name: "Civitavecchia", rent: 650, cost: 70, time: 110},
+                {name: "Guidonia", rent: 550, cost: 45, time: 60},
+                {name: "Anzio/Nettuno", rent: 550, cost: 55, time: 130},
+                {name: "Orte", rent: 450, cost: 75, time: 90}
+            ]
         },
-        bologna: {
+        "bologna": {
             rent: 950,
-            origins: {
-                modena: { name: "Modena", cost: 55, time: 60, rent: 700 },
-                reggio: { name: "Reggio Emilia", cost: 65, time: 90, rent: 600 },
-                parma: { name: "Parma", cost: 75, time: 110, rent: 600 },
-                piacenza: { name: "Piacenza", cost: 90, time: 150, rent: 550 },
-                ferrara: { name: "Ferrara", cost: 60, time: 70, rent: 600 },
-                ravenna: { name: "Ravenna", cost: 80, time: 140, rent: 550 },
-                forli: { name: "Forlì-Cesena", cost: 70, time: 90, rent: 500 },
-                rimini: { name: "Rimini", cost: 110, time: 130, rent: 650 }
-            }
+            destinations: [
+                {name: "Modena", rent: 700, cost: 55, time: 50},
+                {name: "Ferrara", rent: 600, cost: 60, time: 60},
+                {name: "Parma", rent: 600, cost: 75, time: 110},
+                {name: "Ravenna", rent: 550, cost: 80, time: 140},
+                {name: "Forlì-Cesena", rent: 500, cost: 70, time: 80},
+                {name: "Rimini", rent: 650, cost: 110, time: 120},
+                {name: "Imola", rent: 600, cost: 50, time: 40}
+            ]
         },
-        torino: {
+        "torino": {
             rent: 800,
-            origins: {
-                cuneo: { name: "Cuneo", cost: 80, time: 140, rent: 500 },
-                asti: { name: "Asti", cost: 70, time: 80, rent: 500 },
-                alessandria: { name: "Alessandria", cost: 85, time: 110, rent: 450 },
-                biella: { name: "Biella", cost: 80, time: 140, rent: 450 },
-                novara: { name: "Novara", cost: 85, time: 100, rent: 600 },
-                vercelli: { name: "Vercelli", cost: 75, time: 100, rent: 450 },
-                verbania: { name: "Verbania (VCO)", cost: 90, time: 180, rent: 550 },
-                ivrea: { name: "Ivrea (TO)", cost: 65, time: 100, rent: 500 }
-            }
+            destinations: [
+                {name: "Asti", rent: 500, cost: 70, time: 70},
+                {name: "Alessandria", rent: 450, cost: 85, time: 100},
+                {name: "Cuneo", rent: 500, cost: 80, time: 130},
+                {name: "Novara", rent: 600, cost: 85, time: 90},
+                {name: "Ivrea", rent: 500, cost: 65, time: 100},
+                {name: "Vercelli", rent: 450, cost: 75, time: 90}
+            ]
         },
-        napoli: {
+        "napoli": {
             rent: 900,
-            origins: {
-                caserta: { name: "Caserta", cost: 50, time: 60, rent: 550 },
-                benevento: { name: "Benevento", cost: 75, time: 180, rent: 500 },
-                avellino: { name: "Avellino", cost: 65, time: 120, rent: 500 },
-                salerno: { name: "Salerno", cost: 65, time: 90, rent: 650 }
-            }
+            destinations: [
+                {name: "Caserta", rent: 550, cost: 50, time: 60},
+                {name: "Salerno", rent: 650, cost: 65, time: 80},
+                {name: "Benevento", rent: 500, cost: 75, time: 160},
+                {name: "Avellino", rent: 500, cost: 65, time: 110},
+                {name: "Formia", rent: 550, cost: 80, time: 120}
+            ]
         },
-        firenze: {
+        "firenze": {
             rent: 1000,
-            origins: {
-                prato: { name: "Prato", cost: 40, time: 40, rent: 700 },
-                pistoia: { name: "Pistoia", cost: 55, time: 70, rent: 650 },
-                lucca: { name: "Lucca", cost: 75, time: 100, rent: 600 },
-                pisa: { name: "Pisa", cost: 80, time: 120, rent: 700 },
-                livorno: { name: "Livorno", cost: 90, time: 140, rent: 650 },
-                siena: { name: "Siena", cost: 90, time: 180, rent: 650 },
-                arezzo: { name: "Arezzo", cost: 85, time: 100, rent: 600 }
-            }
+            destinations: [
+                {name: "Prato", rent: 700, cost: 40, time: 40},
+                {name: "Pistoia", rent: 650, cost: 55, time: 70},
+                {name: "Pisa", rent: 700, cost: 80, time: 120},
+                {name: "Arezzo", rent: 600, cost: 85, time: 100},
+                {name: "Siena", rent: 650, cost: 90, time: 160}
+            ]
         },
-        venezia: {
+        "venezia": {
             rent: 900,
-            origins: {
-                treviso: { name: "Treviso", cost: 55, time: 60, rent: 650 },
-                padova: { name: "Padova", cost: 55, time: 50, rent: 650 },
-                vicenza: { name: "Vicenza", cost: 70, time: 90, rent: 600 },
-                verona: { name: "Verona", cost: 95, time: 140, rent: 700 },
-                rovigo: { name: "Rovigo", cost: 75, time: 100, rent: 500 }
-            }
+            destinations: [
+                {name: "Padova", rent: 650, cost: 55, time: 50},
+                {name: "Treviso", rent: 650, cost: 55, time: 60},
+                {name: "Vicenza", rent: 600, cost: 70, time: 80},
+                {name: "Verona", rent: 700, cost: 95, time: 130}
+            ]
         },
-        genova: {
-            rent: 750,
-            origins: {
-                savona: { name: "Savona", cost: 65, time: 90, rent: 600 },
-                imperia: { name: "Imperia", cost: 95, time: 180, rent: 650 },
-                spezia: { name: "La Spezia", cost: 95, time: 160, rent: 600 },
-                alessandria: { name: "Alessandria (PIE)", cost: 80, time: 100, rent: 450 }
-            }
-        },
-        bari: {
+        "bari": {
             rent: 700,
-            origins: {
-                foggia: { name: "Foggia", cost: 90, time: 160, rent: 450 },
-                bat: { name: "Barletta-Andria-Trani", cost: 60, time: 80, rent: 500 },
-                brindisi: { name: "Brindisi", cost: 85, time: 120, rent: 500 },
-                lecce: { name: "Lecce", cost: 100, time: 180, rent: 550 },
-                taranto: { name: "Taranto", cost: 90, time: 160, rent: 450 }
-            }
+            destinations: [
+                {name: "Foggia", rent: 450, cost: 90, time: 150},
+                {name: "Barletta-Trani", rent: 500, cost: 60, time: 80},
+                {name: "Brindisi", rent: 500, cost: 85, time: 110},
+                {name: "Lecce", rent: 550, cost: 100, time: 170}
+            ]
         }
     };
 
-    function updateProfile() {
-        const t = document.getElementById('userType').value;
-        const d = document.getElementById('daysPerMonth');
-        const h = document.getElementById('hourlyValue');
-        if(t==='worker'){d.value=20;h.value=15;} else if(t==='student'){d.value=16;h.value=0;} else if(t==='part'){d.value=12;h.value=12;} else if(t==='occasional'){d.value=4;h.value=0;} else {d.value=10;h.value=0;}
-    }
+    // --- LOGICA DOPPIO MENU ---
+    function updateOrigins() {
+        const hub = document.getElementById('hubCity').value;
+        const originSelect = document.getElementById('originCity');
+        const rentCityInput = document.getElementById('rentCity');
 
-    function loadOrigins() {
-        const w = document.getElementById('workCity').value;
-        const h = document.getElementById('homeCity');
-        const r = document.getElementById('rentCity');
-        h.innerHTML = '<option value="" disabled selected>-- Scegli partenza --</option>'; h.disabled = false;
-        if(routes[w]) { r.value = routes[w].rent; for (let k in routes[w].origins) { let o=document.createElement("option"); o.value=k; o.text=routes[w].origins[k].name; h.add(o); } }
+        originSelect.innerHTML = '<option value="">-- Scegli Città Partenza --</option>';
+        originSelect.disabled = true;
+        originSelect.style.background = "var(--border)";
+        originSelect.style.opacity = "0.7";
+
+        if (database[hub]) {
+            rentCityInput.value = database[hub].rent;
+            originSelect.disabled = false;
+            originSelect.style.background = "var(--bg-card)";
+            originSelect.style.opacity = "1";
+            
+            database[hub].destinations.forEach((city, index) => {
+                let option = document.createElement("option");
+                option.value = index; 
+                option.text = city.name;
+                originSelect.add(option);
+            });
+        }
     }
 
     function fillData() {
-        const w=document.getElementById('workCity').value, hk=document.getElementById('homeCity').value;
-        if(w && hk && routes[w].origins[hk]){ const d=routes[w].origins[hk]; document.getElementById('rentHome').value=d.rent; document.getElementById('transportCost').value=d.cost; document.getElementById('travelTime').value=d.time; }
+        const hub = document.getElementById('hubCity').value;
+        const index = document.getElementById('originCity').value;
+        
+        if (hub && index !== "") {
+            const data = database[hub].destinations[index];
+            document.getElementById('rentHome').value = data.rent;
+            document.getElementById('transportCost').value = data.cost;
+            document.getElementById('travelTime').value = data.time;
+            document.getElementById('timeDisplay').innerText = data.time + " min";
+            
+            // Flash effect
+            const el = document.getElementById('rentHome');
+            const originalBg = el.style.backgroundColor;
+            el.style.backgroundColor = "var(--highlight-bg)";
+            setTimeout(() => el.style.backgroundColor = originalBg, 500);
+        }
     }
 
-    let lastSaving = 0, lastWinner = "";
+    // --- LOGICA UTENTE & TEMA ---
+    window.onload = () => {
+        // Gestione Nome
+        const name = localStorage.getItem('userName');
+        if(!name) document.getElementById('welcomeModal').style.display = 'flex';
+        else {
+            document.getElementById('greeting').innerText = "Ciao, " + name;
+            document.getElementById('greeting').style.display = "block";
+        }
+
+        // Gestione Tema
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.body.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        updateChartDefaults(savedTheme);
+    };
+
+    function toggleTheme() {
+        const current = document.body.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        document.body.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcon(next);
+        updateChartDefaults(next);
+        if(c1) calculate(); // Ridisegna grafici se esistono
+    }
+
+    function updateThemeIcon(theme) {
+        const icon = document.getElementById('themeIcon');
+        if(theme === 'dark') {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
+
+    function updateChartDefaults(theme) {
+        const textColor = theme === 'dark' ? '#94a3b8' : '#0f172a';
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = theme === 'dark' ? '#334155' : '#e2e8f0';
+    }
+
+    function saveName() {
+        const val = document.getElementById('modalName').value;
+        if(val) {
+            localStorage.setItem('userName', val);
+            document.getElementById('greeting').innerText = "Ciao, " + val;
+            document.getElementById('greeting').style.display = "block";
+            document.getElementById('welcomeModal').style.display = 'none';
+        }
+    }
+
+    function logout() {
+        if(confirm("Vuoi uscire?")) {
+            localStorage.removeItem('userName');
+            location.reload();
+        }
+    }
+
+    // --- CALCOLO E GRAFICI ---
+    let c1, c2, c3;
+    let globalData = {};
 
     function calculate() {
         const rC = parseFloat(document.getElementById('rentCity').value)||0;
         const rH = parseFloat(document.getElementById('rentHome').value)||0;
-        const trC = parseFloat(document.getElementById('transportCost').value)||0;
-        const tM = parseFloat(document.getElementById('travelTime').value)||0;
-        const hV = parseFloat(document.getElementById('hourlyValue').value)||0;
-        const days = parseFloat(document.getElementById('daysPerMonth').value)||0;
+        const tr = parseFloat(document.getElementById('transportCost').value)||0;
+        const min = parseFloat(document.getElementById('travelTime').value)||0;
+        const hour = parseFloat(document.getElementById('hourlyValue').value)||0;
+        const isSmart = document.getElementById('smartWorking').checked;
 
-        const timeCost = (tM / 60) * days * hV;
-        const totCity = rC;
-        const totHome = rH + trC + timeCost;
+        const timeCost = (min/60) * 20 * hour * (isSmart ? 0.5 : 1);
+        const totC = rC;
+        const totH = rH + tr + timeCost;
+        const diff = totC - totH;
+
+        document.getElementById('resultsArea').style.display = 'block';
+        document.getElementById('chartsArea').style.display = 'block';
         
-        const res = document.getElementById('results');
-        const verd = document.getElementById('verdictText');
-        res.style.display = 'block';
-        
+        const box = document.getElementById('verdictBox');
         const fmt = n => n.toLocaleString('it-IT', {style:'currency', currency:'EUR', maximumFractionDigits:0});
-        document.getElementById('valCity').innerText = fmt(totCity);
-        document.getElementById('valHome').innerText = fmt(totHome);
-        
-        const max = Math.max(totCity, totHome);
-        document.getElementById('barCity').style.width = (totCity/max*100)+'%';
-        document.getElementById('barHome').style.width = (totHome/max*100)+'%';
 
-        lastSaving = Math.abs(totCity - totHome);
-        if (totHome > totCity) {
-            verd.innerHTML = `🛑 Resta in Città.<br>Perdi ${fmt(lastSaving)}`;
-            verd.style.backgroundColor = "#fef2f2"; verd.style.color = "#ef4444";
-            lastWinner = "Città";
+        if(diff > 0) {
+            box.className = "verdict-box win-green";
+            box.innerHTML = `<h2>✅ CONVIENE IL PENDOLARE</h2><span class="big-number">Risparmi ${fmt(diff)}/mese</span>(Compreso il valore del tempo)`;
         } else {
-            verd.innerHTML = `✅ Viaggia.<br>Risparmi ${fmt(lastSaving)}`;
-            verd.style.backgroundColor = "#ecfdf5"; verd.style.color = "#10b981";
-            lastWinner = "Viaggio";
+            box.className = "verdict-box win-red";
+            box.innerHTML = `<h2>🛑 CONVIENE LA CITTÀ</h2><span class="big-number">Risparmi ${fmt(Math.abs(diff))}/mese</span>(Vivere fuori ti costa troppo tempo)`;
         }
-        res.scrollIntoView({behavior: 'smooth'});
-        saveToHistory(lastWinner, lastSaving);
-    }
 
-    function generatePDF() {
-        const element = document.getElementById('mainContainer');
-        const userName = localStorage.getItem('userName') || "Utente";
-        html2pdf().set({ margin:0.5, filename:'Report_'+userName+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} }).from(element).save();
-    }
+        // Grafici
+        if(c1) c1.destroy(); if(c2) c2.destroy(); if(c3) c3.destroy();
 
-    function shareWhatsapp() {
-        const text = `Ho appena calcolato che con "${lastWinner}" risparmio ${lastSaving}€! 😱 Calcola anche tu: ${window.location.href}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-    }
-
-    function saveToHistory(winner, saving) {
-        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
-        const citySelect = document.getElementById('workCity');
-        const cityName = citySelect.options[citySelect.selectedIndex].text.split(' ')[0] || "Calcolo";
-        history.unshift({ date: new Date().toLocaleDateString(), city: cityName, winner: winner, amount: Math.round(saving) });
-        if(history.length > 5) history.pop();
-        localStorage.setItem('calcHistory', JSON.stringify(history));
-        loadHistory();
-    }
-
-    function loadHistory() {
-        const list = document.getElementById('historyList');
-        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
-        list.innerHTML = "";
-        if(history.length === 0) { list.innerHTML = "<li style='color:var(--text-muted); text-align:center; padding:10px;'>Nessun calcolo recente.</li>"; return; }
-        history.forEach(item => {
-            let badgeClass = item.winner === "Città" ? "badge-city" : "badge-travel";
-            list.innerHTML += `<li class="history-item"><div><strong>${item.city}</strong> <span style="font-size:0.8em; opacity:0.7">(${item.date})</span><br>Vince: <span class="history-badge ${badgeClass}">${item.winner}</span></div><div style="font-weight:bold;">Risparmio: ${item.amount}€</div></li>`;
+        // 1. Chart Città
+        c1 = new Chart(document.getElementById('cityChart'), {
+            type: 'doughnut', 
+            data: {labels:['Affitto'], datasets:[{data:[totC], backgroundColor:['#2563eb'], borderWidth: 0}]},
+            options: {
+                plugins:{ legend:{ display:false }, tooltip: { enabled: true } }
+            }
         });
+
+        // 2. Chart Pendolare con Percentuali nella Legenda
+        c2 = new Chart(document.getElementById('homeChart'), {
+            type: 'doughnut', 
+            data: {
+                labels:['Affitto','Viaggio','Tempo'], 
+                datasets:[{
+                    data:[rH, tr, timeCost], 
+                    backgroundColor:['#2563eb','#10b981','#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            generateLabels: (chart) => {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(0) + "%";
+                                        return {
+                                            text: `${label}: ${percentage}`, // AGGIUNTA PERCENTUALE QUI
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            hidden: isNaN(data.datasets[0].data[i]),
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const yearly = diff * 12;
+        c3 = new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: ['Anno 1','Anno 2','Anno 3','Anno 4','Anno 5'],
+                datasets: [{
+                    label: 'Risparmio Cumulativo',
+                    data: [yearly, yearly*2, yearly*3, yearly*4, yearly*5],
+                    borderColor: '#2563eb', fill: true, backgroundColor: 'rgba(37,99,235,0.1)'
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        globalData = { rC, totC, rH, tr, timeCost, totH, diff };
+        document.getElementById('resultsArea').scrollIntoView({behavior:'smooth'});
     }
 
-    function clearHistory() {
-        if(confirm("Vuoi cancellare tutta la cronologia?")) { localStorage.removeItem('calcHistory'); loadHistory(); }
+    // --- PDF GENERATOR ---
+    function makePDF() {
+        if(!globalData.totC) return;
+        const fmt = n => n.toLocaleString('it-IT', {style:'currency', currency:'EUR'});
+        
+        document.getElementById('pdfUser').innerText = localStorage.getItem('userName') || "Utente";
+        document.getElementById('pdfDate').innerText = new Date().toLocaleDateString();
+        
+        document.getElementById('pdfRentCity').innerText = fmt(globalData.rC);
+        document.getElementById('pdfTotCity').innerText = fmt(globalData.totC);
+        document.getElementById('pdfRentHome').innerText = fmt(globalData.rH);
+        document.getElementById('pdfTrans').innerText = fmt(globalData.tr);
+        document.getElementById('pdfTime').innerText = fmt(globalData.timeCost);
+        document.getElementById('pdfTotHome').innerText = fmt(globalData.totH);
+
+        const v = document.getElementById('pdfVerdict');
+        if (globalData.diff > 0) {
+            v.innerText = `CONSIGLIO: PENDOLARE (Risparmi ${fmt(globalData.diff)} al mese)`;
+            v.style.backgroundColor = "#ecfdf5"; v.style.color = "#065f46";
+        } else {
+            v.innerText = `CONSIGLIO: CITTÀ (Risparmi ${fmt(Math.abs(globalData.diff))} al mese)`;
+            v.style.backgroundColor = "#fef2f2"; v.style.color = "#991b1b";
+        }
+
+        document.getElementById('pdfChartImg').src = c3.toBase64Image();
+
+        const el = document.getElementById('pdf-template');
+        const opt = {
+            margin: 0,
+            filename: 'Report_Pendolare.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(el).save();
+    }
+
+    function shareWa() {
+        const msg = `Ho calcolato il mio risparmio reale: ${Math.round(globalData.diff)}€ al mese! Calcola anche tu qui: ${window.location.href}`;
+        window.open('https://wa.me/?text='+encodeURIComponent(msg));
     }
 </script>
 

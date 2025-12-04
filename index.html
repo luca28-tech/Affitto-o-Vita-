@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Affitto o Viaggio? - Calcolatore Ultimate</title>
-    <meta name="description" content="Calcolatore pendolari con PDF, Dark Mode e condivisione.">
+    <title>Affitto o Viaggio? - Calcolatore Nazionale</title>
+    <meta name="description" content="Calcolatore pendolari con copertura di tutte le province italiane.">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        /* --- STILI BASE (Variabili CSS) --- */
+        /* --- STILI BASE --- */
         :root {
-            /* Colori Light Mode (Default) */
             --primary: #2563eb; --primary-dark: #1e40af;
             --secondary: #10b981; --danger: #ef4444;
             --bg-right: #f8fafc; --card-bg: #ffffff;
@@ -20,7 +19,6 @@
             --highlight-bg: #eff6ff; --highlight-border: #bfdbfe;
         }
 
-        /* --- DARK MODE (Sovrascrittura Variabili) --- */
         [data-theme="dark"] {
             --primary: #3b82f6; --primary-dark: #60a5fa;
             --bg-right: #0f172a; --card-bg: #1e293b;
@@ -39,10 +37,9 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
-        /* Immagine */
         .image-side {
             flex: 1; 
-            background-image: url('https://www.fsnews.it/content/dam/fs_news/focus-2022/marzo/servizi/17_03_2022_FS_accordo_ADR_apertura.jpg'); 
+            background-image: url('https://images.unsplash.com/photo-1474487548417-781cb714c2f0?q=80&w=2600&auto=format&fit=crop'); 
             background-size: cover; background-position: center; position: relative;
         }
         .image-side::before {
@@ -56,7 +53,6 @@
         .image-content h2 { font-size: 2.8rem; margin: 0 0 15px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1.2; }
         .image-content p { font-size: 1.3rem; opacity: 0.95; line-height: 1.5; }
         
-        /* Modulo */
         .form-side {
             flex: 1; background-color: var(--bg-right);
             display: flex; justify-content: center; align-items: center; 
@@ -68,12 +64,10 @@
             transition: background-color 0.3s;
         }
         
-        /* Header & Pulsanti */
         .header-section { text-align: center; margin-bottom: 1.5rem; position: relative; }
         h1 { color: var(--text-main); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; display: inline-block; }
         p.subtitle { color: var(--text-muted); margin: 0; }
         
-        /* TASTI HEADER (Logout + Dark Mode) */
         .header-controls { position: absolute; top: 0; right: 0; display: flex; gap: 10px; }
         .icon-btn {
             background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);
@@ -82,11 +76,8 @@
             transition: all 0.2s;
         }
         .icon-btn:hover { background: var(--highlight-bg); color: var(--primary); border-color: var(--primary); }
+        .logout-btn { display: none; }
 
-        /* Logout specifico */
-        .logout-btn { display: none; } /* Si mostra via JS */
-
-        /* POPUP (MODAL) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
@@ -106,7 +97,6 @@
             border-radius: 12px; font-size: 1.1rem; margin: 20px 0; text-align: center; 
         }
         
-        /* ELEMENTI FORM */
         .highlight-box { background: var(--highlight-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--highlight-border); margin-bottom: 20px; }
         .input-group { margin-bottom: 1rem; }
         label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
@@ -120,14 +110,12 @@
         button.main-btn { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 1.1rem; transition: background 0.3s; }
         button.main-btn:hover { background-color: var(--primary-dark); }
         
-        /* RISULTATI */
         #results { margin-top: 2rem; padding-top: 1rem; border-top: 2px dashed var(--input-border); display: none; }
-        .verdict { font-weight: bold; text-align: center; margin-bottom: 1rem; padding: 15px; border-radius: 8px; font-size: 1.1rem; color: #1f2937; /* Force dark text in verdict box for readability */ }
+        .verdict { font-weight: bold; text-align: center; margin-bottom: 1rem; padding: 15px; border-radius: 8px; font-size: 1.1rem; color: #1f2937; }
         .bar-container { height: 20px; background-color: var(--input-border); border-radius: 20px; margin-bottom: 10px; overflow: hidden; }
         .bar-fill { height: 100%; transition: width 1s; }
         .bar-label { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; color: var(--text-main); }
         
-        /* AZIONI RISULTATI (PDF & WhatsApp) */
         .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
         .action-btn {
             flex: 1; padding: 12px; border: none; border-radius: 8px; 
@@ -138,7 +126,6 @@
         .btn-pdf { background-color: #64748b; }
         .btn-whatsapp { background-color: #25D366; }
 
-        /* CRONOLOGIA */
         .history-section { margin-top: 30px; border-top: 2px solid var(--input-border); padding-top: 20px; }
         .history-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); }
         .history-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; }
@@ -168,13 +155,10 @@
         <span class="modal-icon">👋</span>
         <h2 style="margin:0; color:#1f2937;">Benvenuto!</h2>
         <p style="color:#6b7280; margin-top:10px;">Come ti chiami? Personalizzeremo i calcoli.</p>
-        
         <input type="text" id="modalNameInput" class="modal-input" placeholder="Il tuo nome...">
-        
         <button class="main-btn" onclick="saveNameFromModal()">Inizia</button>
         <span class="modal-skip" onclick="closeModal()">Salta per ora</span>
-        
-        <div id="privacyText" class="privacy-text" style="font-size: 0.75rem; color: #64748b; margin-top: 20px; background: #f1f5f9; padding: 8px; border-radius: 6px;">
+        <div id="privacyText" style="font-size: 0.75rem; color: #64748b; margin-top: 20px; background: #f1f5f9; padding: 8px; border-radius: 6px;">
             🔒 Verifica dispositivo...
         </div>
     </div>
@@ -189,14 +173,13 @@
 
 <div class="form-side">
     <div class="container" id="mainContainer">
-        
         <div class="header-section">
             <div class="header-controls">
                 <button class="icon-btn" onclick="toggleTheme()" title="Cambia Tema">🌓</button>
                 <button id="logoutBtn" class="icon-btn logout-btn" onclick="logoutUser()" title="Esci">❌</button>
             </div>
             <h1 id="pageTitle">🏠 Città vs. Pendolare 🚆</h1>
-            <p class="subtitle" id="pageSubtitle">Confronta costi e tempi in 30 secondi.</p>
+            <p class="subtitle" id="pageSubtitle">Calcola risparmio in 30 secondi.</p>
         </div>
 
         <div class="highlight-box">
@@ -217,22 +200,25 @@
         </div>
 
         <div class="input-group">
-            <label>📍 Destinazione</label>
+            <label>📍 Dove lavori/studi?</label>
             <select id="workCity" onchange="loadOrigins()">
-                <option value="" disabled selected>-- Seleziona --</option>
-                <option value="milano">Milano</option>
-                <option value="bologna">Bologna</option>
-                <option value="roma">Roma</option>
-                <option value="torino">Torino</option>
-                <option value="napoli">Napoli</option>
-                <option value="firenze">Firenze</option>
+                <option value="" disabled selected>-- Seleziona Città Hub --</option>
+                <option value="milano">Milano (Lombardia)</option>
+                <option value="roma">Roma (Lazio)</option>
+                <option value="bologna">Bologna (Emilia)</option>
+                <option value="torino">Torino (Piemonte)</option>
+                <option value="napoli">Napoli (Campania)</option>
+                <option value="firenze">Firenze (Toscana)</option>
+                <option value="venezia">Venezia (Veneto)</option>
+                <option value="genova">Genova (Liguria)</option>
+                <option value="bari">Bari (Puglia)</option>
             </select>
         </div>
 
         <div class="input-group">
-            <label>🏠 Partenza</label>
+            <label>🏠 Da dove parti?</label>
             <select id="homeCity" onchange="fillData()" disabled>
-                <option value="">-- Scegli prima destinazione --</option>
+                <option value="">-- Scegli prima la destinazione --</option>
             </select>
         </div>
         
@@ -248,20 +234,14 @@
 
         <div id="results">
             <div class="verdict" id="verdictText"></div>
-            
             <div class="bar-label"><span>Vivere lì</span> <span id="valCity">0€</span></div>
             <div class="bar-container"><div class="bar-fill" id="barCity" style="width:0%; background:var(--primary)"></div></div>
-            
             <div class="bar-label"><span>Viaggiare</span> <span id="valHome">0€</span></div>
             <div class="bar-container"><div class="bar-fill" id="barHome" style="width:0%; background:var(--secondary)"></div></div>
 
             <div class="action-buttons" data-html2canvas-ignore="true">
-                <button class="action-btn btn-whatsapp" onclick="shareWhatsapp()">
-                    <span>💬</span> WhatsApp
-                </button>
-                <button class="action-btn btn-pdf" onclick="generatePDF()">
-                    <span>📄</span> Scarica PDF
-                </button>
+                <button class="action-btn btn-whatsapp" onclick="shareWhatsapp()"><span>💬</span> WhatsApp</button>
+                <button class="action-btn btn-pdf" onclick="generatePDF()"><span>📄</span> PDF</button>
             </div>
         </div>
 
@@ -278,90 +258,153 @@
 </div>
 
 <script>
-    // --- 1. DARK MODE ---
+    // --- GESTIONE APP ---
     function toggleTheme() {
         const body = document.body;
-        const currentTheme = body.getAttribute("data-theme");
-        
-        if (currentTheme === "dark") {
-            body.removeAttribute("data-theme");
-            localStorage.setItem("theme", "light");
-        } else {
-            body.setAttribute("data-theme", "dark");
-            localStorage.setItem("theme", "dark");
-        }
+        const current = body.getAttribute("data-theme");
+        if (current === "dark") { body.removeAttribute("data-theme"); localStorage.setItem("theme", "light"); }
+        else { body.setAttribute("data-theme", "dark"); localStorage.setItem("theme", "dark"); }
     }
 
-    // --- 2. RILEVAMENTO DISPOSITIVO E INIT ---
     window.onload = function() {
-        // Applica tema salvato
-        if (localStorage.getItem("theme") === "dark") {
-            document.body.setAttribute("data-theme", "dark");
-        }
-
-        // Privacy Text
+        if (localStorage.getItem("theme") === "dark") document.body.setAttribute("data-theme", "dark");
+        
         const privacyText = document.getElementById('privacyText');
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
-        privacyText.innerHTML = isMobile 
-            ? "🔒 <b>Sicuro:</b> Dati salvati solo su questo <b>Telefono</b>."
-            : "🔒 <b>Sicuro:</b> Dati salvati nel browser di questo <b>PC</b>.";
+        privacyText.innerHTML = isMobile ? "🔒 Sicuro: Dati salvati su questo Telefono." : "🔒 Sicuro: Dati salvati su questo PC.";
 
-        // Controllo Utente
         const storedName = localStorage.getItem('userName');
-        if (!storedName) {
-            document.getElementById('welcomeModal').style.display = 'flex';
-        } else {
-            personalizeUI(storedName);
-        }
+        if (!storedName) { document.getElementById('welcomeModal').style.display = 'flex'; }
+        else { personalizeUI(storedName); }
         loadHistory(); 
     };
 
     function saveNameFromModal() {
         const name = document.getElementById('modalNameInput').value;
-        if (name.trim() !== "") {
-            localStorage.setItem('userName', name);
-            personalizeUI(name);
-            closeModal();
-        } else {
-            alert("Inserisci un nome.");
-        }
+        if (name.trim()) { localStorage.setItem('userName', name); personalizeUI(name); closeModal(); }
+        else { alert("Inserisci un nome."); }
     }
-
     function closeModal() { document.getElementById('welcomeModal').style.display = 'none'; }
-
     function personalizeUI(name) {
         document.getElementById('pageTitle').innerText = "Ciao, " + name + "! 👋";
         document.getElementById('logoutBtn').style.display = "flex";
     }
-
     function logoutUser() {
-        if(confirm("Vuoi uscire? Il tuo nome e la cronologia verranno cancellati.")) {
-            localStorage.removeItem('userName');
-            localStorage.removeItem('calcHistory');
-            location.reload();
-        }
+        if(confirm("Vuoi uscire?")) { localStorage.removeItem('userName'); localStorage.removeItem('calcHistory'); location.reload(); }
     }
 
-    // --- 3. DATABASE TRENI ---
+    // --- MEGA DATABASE PROVINCE ITALIANE (Stime 2025) ---
+    // Struttura: Hub -> Province Collegate
     const routes = {
+        milano: {
+            rent: 1350,
+            origins: {
+                varese: { name: "Varese", cost: 75, time: 110, rent: 700 },
+                como: { name: "Como", cost: 70, time: 90, rent: 750 },
+                lecco: { name: "Lecco", cost: 70, time: 100, rent: 650 },
+                sondrio: { name: "Sondrio", cost: 95, time: 240, rent: 550 },
+                bergamo: { name: "Bergamo", cost: 65, time: 100, rent: 700 },
+                brescia: { name: "Brescia", cost: 105, time: 120, rent: 650 },
+                pavia: { name: "Pavia", cost: 60, time: 70, rent: 650 },
+                lodi: { name: "Lodi", cost: 55, time: 60, rent: 650 },
+                cremona: { name: "Cremona", cost: 85, time: 130, rent: 550 },
+                mantova: { name: "Mantova", cost: 95, time: 240, rent: 500 },
+                monza: { name: "Monza", cost: 40, time: 30, rent: 850 },
+                novara: { name: "Novara (PIE)", cost: 75, time: 90, rent: 600 },
+                piacenza: { name: "Piacenza (EMI)", cost: 85, time: 100, rent: 550 }
+            }
+        },
+        roma: {
+            rent: 1150,
+            origins: {
+                viterbo: { name: "Viterbo", cost: 70, time: 160, rent: 500 },
+                rieti: { name: "Rieti", cost: 65, time: 180, rent: 450 },
+                latina: { name: "Latina", cost: 60, time: 90, rent: 600 },
+                frosinone: { name: "Frosinone", cost: 75, time: 130, rent: 500 },
+                civitavecchia: { name: "Civitavecchia (RM)", cost: 70, time: 110, rent: 650 },
+                tivoli: { name: "Tivoli (RM)", cost: 45, time: 70, rent: 600 },
+                guidonia: { name: "Guidonia (RM)", cost: 45, time: 60, rent: 550 },
+                anzio: { name: "Anzio/Nettuno (RM)", cost: 55, time: 140, rent: 550 }
+            }
+        },
         bologna: {
             rent: 950,
             origins: {
-                forli_cesena: { name: "Forlì-Cesena", cost: 70, time: 90, rent: 500 },
-                rimini: { name: "Rimini", cost: 110, time: 130, rent: 650 },
                 modena: { name: "Modena", cost: 55, time: 60, rent: 700 },
+                reggio: { name: "Reggio Emilia", cost: 65, time: 90, rent: 600 },
                 parma: { name: "Parma", cost: 75, time: 110, rent: 600 },
-                ferrara: { name: "Ferrara", cost: 60, time: 70, rent: 600 }
+                piacenza: { name: "Piacenza", cost: 90, time: 150, rent: 550 },
+                ferrara: { name: "Ferrara", cost: 60, time: 70, rent: 600 },
+                ravenna: { name: "Ravenna", cost: 80, time: 140, rent: 550 },
+                forli: { name: "Forlì-Cesena", cost: 70, time: 90, rent: 500 },
+                rimini: { name: "Rimini", cost: 110, time: 130, rent: 650 }
             }
         },
-        milano: { rent: 1350, origins: { monza: {name:"Monza", cost:40, time:30, rent:850}, pavia: {name:"Pavia", cost:60, time:70, rent:700}, como: {name:"Como", cost:70, time:90, rent:750}, bergamo: {name:"Bergamo", cost:65, time:100, rent:750} } },
-        roma: { rent: 1150, origins: { latina: {name:"Latina", cost:60, time:90, rent:600}, viterbo: {name:"Viterbo", cost:70, time:160, rent:500}, civitavecchia: {name:"Civitavecchia", cost:70, time:110, rent:650} } },
-        torino: { rent: 800, origins: { asti: {name:"Asti", cost:70, time:80, rent:500}, ivrea: {name:"Ivrea", cost:65, time:100, rent:500} } },
-        napoli: { rent: 900, origins: { caserta: {name:"Caserta", cost:50, time:60, rent:550}, salerno: {name:"Salerno", cost:65, time:90, rent:650} } },
-        firenze: { rent: 1000, origins: { prato: {name:"Prato", cost:40, time:40, rent:700}, pisa: {name:"Pisa", cost:80, time:120, rent:700} } }
+        torino: {
+            rent: 800,
+            origins: {
+                cuneo: { name: "Cuneo", cost: 80, time: 140, rent: 500 },
+                asti: { name: "Asti", cost: 70, time: 80, rent: 500 },
+                alessandria: { name: "Alessandria", cost: 85, time: 110, rent: 450 },
+                biella: { name: "Biella", cost: 80, time: 140, rent: 450 },
+                novara: { name: "Novara", cost: 85, time: 100, rent: 600 },
+                vercelli: { name: "Vercelli", cost: 75, time: 100, rent: 450 },
+                verbania: { name: "Verbania (VCO)", cost: 90, time: 180, rent: 550 },
+                ivrea: { name: "Ivrea (TO)", cost: 65, time: 100, rent: 500 }
+            }
+        },
+        napoli: {
+            rent: 900,
+            origins: {
+                caserta: { name: "Caserta", cost: 50, time: 60, rent: 550 },
+                benevento: { name: "Benevento", cost: 75, time: 180, rent: 500 },
+                avellino: { name: "Avellino", cost: 65, time: 120, rent: 500 },
+                salerno: { name: "Salerno", cost: 65, time: 90, rent: 650 }
+            }
+        },
+        firenze: {
+            rent: 1000,
+            origins: {
+                prato: { name: "Prato", cost: 40, time: 40, rent: 700 },
+                pistoia: { name: "Pistoia", cost: 55, time: 70, rent: 650 },
+                lucca: { name: "Lucca", cost: 75, time: 100, rent: 600 },
+                pisa: { name: "Pisa", cost: 80, time: 120, rent: 700 },
+                livorno: { name: "Livorno", cost: 90, time: 140, rent: 650 },
+                siena: { name: "Siena", cost: 90, time: 180, rent: 650 },
+                arezzo: { name: "Arezzo", cost: 85, time: 100, rent: 600 }
+            }
+        },
+        venezia: {
+            rent: 900,
+            origins: {
+                treviso: { name: "Treviso", cost: 55, time: 60, rent: 650 },
+                padova: { name: "Padova", cost: 55, time: 50, rent: 650 },
+                vicenza: { name: "Vicenza", cost: 70, time: 90, rent: 600 },
+                verona: { name: "Verona", cost: 95, time: 140, rent: 700 },
+                rovigo: { name: "Rovigo", cost: 75, time: 100, rent: 500 }
+            }
+        },
+        genova: {
+            rent: 750,
+            origins: {
+                savona: { name: "Savona", cost: 65, time: 90, rent: 600 },
+                imperia: { name: "Imperia", cost: 95, time: 180, rent: 650 },
+                spezia: { name: "La Spezia", cost: 95, time: 160, rent: 600 },
+                alessandria: { name: "Alessandria (PIE)", cost: 80, time: 100, rent: 450 }
+            }
+        },
+        bari: {
+            rent: 700,
+            origins: {
+                foggia: { name: "Foggia", cost: 90, time: 160, rent: 450 },
+                bat: { name: "Barletta-Andria-Trani", cost: 60, time: 80, rent: 500 },
+                brindisi: { name: "Brindisi", cost: 85, time: 120, rent: 500 },
+                lecce: { name: "Lecce", cost: 100, time: 180, rent: 550 },
+                taranto: { name: "Taranto", cost: 90, time: 160, rent: 450 }
+            }
+        }
     };
 
-    // --- 4. FUNZIONI CALCOLO ---
     function updateProfile() {
         const t = document.getElementById('userType').value;
         const d = document.getElementById('daysPerMonth');
@@ -382,9 +425,7 @@
         if(w && hk && routes[w].origins[hk]){ const d=routes[w].origins[hk]; document.getElementById('rentHome').value=d.rent; document.getElementById('transportCost').value=d.cost; document.getElementById('travelTime').value=d.time; }
     }
 
-    // Variabili globali per condivisione
-    let lastSaving = 0;
-    let lastWinner = "";
+    let lastSaving = 0, lastWinner = "";
 
     function calculate() {
         const rC = parseFloat(document.getElementById('rentCity').value)||0;
@@ -411,7 +452,6 @@
         document.getElementById('barHome').style.width = (totHome/max*100)+'%';
 
         lastSaving = Math.abs(totCity - totHome);
-        
         if (totHome > totCity) {
             verd.innerHTML = `🛑 Resta in Città.<br>Perdi ${fmt(lastSaving)}`;
             verd.style.backgroundColor = "#fef2f2"; verd.style.color = "#ef4444";
@@ -425,42 +465,22 @@
         saveToHistory(lastWinner, lastSaving);
     }
 
-    // --- NUOVE FUNZIONI (PDF & WHATSAPP) ---
-    
     function generatePDF() {
         const element = document.getElementById('mainContainer');
         const userName = localStorage.getItem('userName') || "Utente";
-        
-        const opt = {
-            margin:       0.5,
-            filename:     'Report_Pendolare_' + userName + '.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        
-        // Usa la libreria importata
-        html2pdf().set(opt).from(element).save();
+        html2pdf().set({ margin:0.5, filename:'Report_'+userName+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} }).from(element).save();
     }
 
     function shareWhatsapp() {
-        const text = `Ho appena calcolato che scegliendo la soluzione "${lastWinner}" risparmio ${lastSaving}€ al mese! 😱 Calcola anche tu qui: ${window.location.href}`;
+        const text = `Ho appena calcolato che con "${lastWinner}" risparmio ${lastSaving}€! 😱 Calcola anche tu: ${window.location.href}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    // --- CRONOLOGIA ---
     function saveToHistory(winner, saving) {
         let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
         const citySelect = document.getElementById('workCity');
         const cityName = citySelect.options[citySelect.selectedIndex].text.split(' ')[0] || "Calcolo";
-        
-        history.unshift({
-            date: new Date().toLocaleDateString(),
-            city: cityName,
-            winner: winner,
-            amount: Math.round(saving)
-        });
-        
+        history.unshift({ date: new Date().toLocaleDateString(), city: cityName, winner: winner, amount: Math.round(saving) });
         if(history.length > 5) history.pop();
         localStorage.setItem('calcHistory', JSON.stringify(history));
         loadHistory();
@@ -470,9 +490,7 @@
         const list = document.getElementById('historyList');
         let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
         list.innerHTML = "";
-        if(history.length === 0) {
-            list.innerHTML = "<li style='color:var(--text-muted); text-align:center; padding:10px;'>Nessun calcolo recente.</li>"; return;
-        }
+        if(history.length === 0) { list.innerHTML = "<li style='color:var(--text-muted); text-align:center; padding:10px;'>Nessun calcolo recente.</li>"; return; }
         history.forEach(item => {
             let badgeClass = item.winner === "Città" ? "badge-city" : "badge-travel";
             list.innerHTML += `<li class="history-item"><div><strong>${item.city}</strong> <span style="font-size:0.8em; opacity:0.7">(${item.date})</span><br>Vince: <span class="history-badge ${badgeClass}">${item.winner}</span></div><div style="font-weight:bold;">Risparmio: ${item.amount}€</div></li>`;
@@ -480,10 +498,7 @@
     }
 
     function clearHistory() {
-        if(confirm("Vuoi cancellare tutta la cronologia?")) {
-            localStorage.removeItem('calcHistory');
-            loadHistory();
-        }
+        if(confirm("Vuoi cancellare tutta la cronologia?")) { localStorage.removeItem('calcHistory'); loadHistory(); }
     }
 </script>
 

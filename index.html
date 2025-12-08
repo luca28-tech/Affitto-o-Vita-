@@ -2,714 +2,487 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="theme-color" content="#0f172a">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pendolareApp.it | Scelte Intelligenti</title>
     
-    <title>Calcolatore Pendolare vs Città | Analisi Costi Reali</title>
-    <meta name="description" content="Scopri se ti conviene vivere in città o fare il pendolare. Calcolatore con tratte italiane reali.">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        /* --- 1. DESIGN SYSTEM & DARK MODE --- */
+        /* --- DESIGN SYSTEM --- */
         :root {
-            /* Colori Base (Light Mode) */
-            --primary: #0f172a;      
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --accent: #2563eb;       
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-input: #f8fafc;
-            --border: #e2e8f0;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            --overlay-bg: rgba(255, 255, 255, 0.90);
-            --modal-bg: #ffffff;
-            --highlight-bg: #eff6ff;
-            --highlight-border: #bfdbfe;
+            --primary: #0f172a; --accent: #2563eb; --accent-hover: #1d4ed8;
+            --bg-body: #f8fafc; --bg-card: #ffffff; --bg-input: #f1f5f9;
+            --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0;
+            --chat-user: #dbeafe; --chat-bot: #f8fafc;
+            --wa-color: #25D366; --wa-hover: #1ebc57;
         }
-
-        /* Configurazione Dark Mode */
         [data-theme="dark"] {
-            --primary: #f1f5f9;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --accent: #3b82f6;
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --bg-input: #334155;
-            --border: #334155;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            --overlay-bg: rgba(15, 23, 42, 0.95);
-            --modal-bg: #1e293b;
-            --highlight-bg: #1e3a8a;
-            --highlight-border: #2563eb;
+            --primary: #f8fafc; --accent: #3b82f6; --accent-hover: #60a5fa;
+            --bg-body: #0f172a; --bg-card: #1e293b; --bg-input: #334155;
+            --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155;
+            --chat-user: #1e40af; --chat-bot: #334155;
         }
 
-        * { box-sizing: border-box; outline: none; }
+        * { box-sizing: border-box; outline: none; font-family: 'Inter', sans-serif; }
+        body { margin: 0; padding-top: 60px; background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop'); background-size: cover; background-attachment: fixed; transition: 0.3s; }
+        [data-theme="dark"] body { background-blend-mode: multiply; background-color: #0f172a; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-main);
-            margin: 0;
-            padding-top: 70px;
-            line-height: 1.6;
-            min-height: 100vh;
-            background-color: var(--bg-body);
-            background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            /* In dark mode scurisci l'immagine di sfondo */
-            transition: background-color 0.3s, color 0.3s;
-        }
+        /* NAVBAR & UI */
+        .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+        [data-theme="dark"] .navbar { background: rgba(15,23,42,0.95); }
+        .logo { font-weight: 800; font-size: 1.2rem; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .btn-icon { background: none; border: 1px solid var(--border); padding: 8px; border-radius: 8px; color: var(--text-main); cursor: pointer; }
+
+        /* MENU LATERALE */
+        .menu-overlay { position: fixed; top: 60px; left: 0; width: 100%; height: calc(100vh - 60px); background: rgba(0,0,0,0.5); z-index: 998; display: none; }
+        .side-menu { position: fixed; top: 60px; left: -260px; width: 250px; height: calc(100vh - 60px); background: var(--bg-card); border-right: 1px solid var(--border); z-index: 999; transition: 0.3s; padding: 20px; display: flex; flex-direction: column; gap: 5px; }
+        .side-menu.open { left: 0; }
+        .menu-item { padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; gap: 12px; align-items: center; color: var(--text-main); }
+        .menu-item.active { background: var(--bg-input); color: var(--accent); }
         
-        [data-theme="dark"] body {
-            background-blend-mode: multiply;
-            background-color: #0f172a; /* Blend con l'immagine */
-        }
-
-        /* --- 2. HEADER FISSO --- */
-        .navbar {
-            position: fixed; top: 0; left: 0; width: 100%;
-            background: var(--overlay-bg);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-            padding: 15px 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 1000;
-            transition: 0.3s;
-        }
-        .logo { font-weight: 900; font-size: 1.3rem; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 15px; }
+        .section-view { display: none; animation: fadeIn 0.4s; }
+        .section-view.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         
-        .nav-actions { display: flex; gap: 10px; align-items: center; }
-
-        .btn-icon { 
-            background: none; border: 1px solid var(--border); 
-            padding: 8px 12px; border-radius: 8px; 
-            color: var(--text-muted); cursor: pointer; transition: 0.2s; 
-        }
-        .btn-icon:hover { color: var(--accent); border-color: var(--accent); background: var(--bg-input); }
-        .logout-btn:hover { color: #ef4444; border-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
-
-        /* --- 3. LAYOUT PRINCIPALE --- */
-        .main-layout {
-            max-width: 1200px; margin: 40px auto;
-            display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; padding: 20px;
-        }
-
-        /* --- CARD --- */
-        .card {
-            background: var(--bg-card); border-radius: 20px; padding: 35px;
-            box-shadow: var(--shadow); border: 1px solid var(--border);
-            transition: 0.3s;
-        }
-
-        h2 { font-size: 1.5rem; margin-bottom: 25px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
-        h2 i { color: var(--accent); }
-        h4 { color: var(--text-main); }
-
-        /* --- INPUT FORM --- */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; color: var(--text-main); }
+        .card { background: var(--bg-card); border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media(max-width:700px){ .grid-2 { grid-template-columns: 1fr; } }
         
-        .input-wrapper { position: relative; }
-        .currency-symbol { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: bold; }
-        
-        input[type="number"], select, input[type="text"] {
-            width: 100%; padding: 14px 14px 14px 35px;
-            border: 2px solid var(--border); border-radius: 10px;
-            font-size: 1rem; transition: 0.2s; background: var(--bg-input); 
-            font-weight: 600; color: var(--text-main);
-        }
-        select { padding-left: 15px; cursor: pointer; }
-        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
-        input::placeholder { color: var(--text-muted); opacity: 0.5; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-main); font-weight: 500; margin-bottom: 10px; }
+        .btn-main { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-main:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .btn-wa { background: var(--wa-color); } .btn-wa:hover { background: var(--wa-hover); }
 
-        /* Slider */
-        input[type="range"] { width: 100%; margin-top: 10px; accent-color: var(--accent); cursor: pointer; }
+        /* CHATBOT */
+        .chat-area { height: 450px; overflow-y: auto; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px; }
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; line-height: 1.5; }
+        .msg-bot { background: var(--chat-bot); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; color: var(--text-main); }
+        .msg-user { background: var(--chat-user); align-self: flex-end; border-bottom-right-radius: 4px; color: #1e3a8a; }
+        .msg-img { max-width: 100%; border-radius: 10px; margin-top: 5px; border: 2px solid var(--accent); }
+        .ai-tools { display: flex; gap: 8px; padding: 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; align-items: center; }
+        #camera-preview { width: 100%; height: 200px; background: #000; border-radius: 10px; display: none; object-fit: cover; margin-bottom: 10px; }
 
-        /* Smart Working Box */
-        .smart-working-box {
-            background: var(--highlight-bg); border: 2px solid var(--highlight-border); padding: 15px; border-radius: 10px;
-            display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s;
-        }
-        .smart-working-box:hover { border-color: var(--accent); }
-        .smart-working-box input { width: 20px; height: 20px; accent-color: var(--accent); }
+        /* AUTH & COMMUNITY */
+        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .auth-box { background: var(--bg-card); padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; border: 1px solid var(--border); }
+        .post { border-bottom: 1px solid var(--border); padding: 15px 0; }
+        .post-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+        .post-user { font-weight: 700; color: var(--accent); }
 
-        /* Pulsante Principale */
-        .btn-main {
-            width: 100%; padding: 18px; background: var(--accent); color: white;
-            border: none; border-radius: 12px; font-weight: 800; font-size: 1.2rem;
-            cursor: pointer; transition: 0.2s; display: flex; justify-content: center; gap: 10px;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); margin-top: 20px;
-        }
-        .btn-main:hover { filter: brightness(1.1); transform: translateY(-2px); }
-
-        /* --- RISULTATI --- */
-        #resultsArea { display: none; margin-top: 30px; border-top: 2px dashed var(--border); padding-top: 30px; }
-        
-        .verdict-box { text-align: center; padding: 30px; border-radius: 16px; margin-bottom: 30px; border: 2px solid transparent; }
-        .win-green { background: rgba(16, 185, 129, 0.1); color: #059669; border-color: #34d399; }
-        [data-theme="dark"] .win-green { background: rgba(5, 150, 105, 0.2); color: #6ee7b7; border-color: #059669; }
-
-        .win-red { background: rgba(239, 68, 68, 0.1); color: #b91c1c; border-color: #f87171; }
-        [data-theme="dark"] .win-red { background: rgba(185, 28, 28, 0.2); color: #fca5a5; border-color: #b91c1c; }
-
-        .big-number { font-size: 2.8rem; font-weight: 900; display: block; margin: 10px 0; }
-
-        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .chart-box { background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
-        .chart-full { grid-column: span 2; }
-
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-action { padding: 15px; border: 2px solid var(--border); background: var(--bg-card); color: var(--text-main); border-radius: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
-        .btn-action:hover { background: var(--bg-input); border-color: var(--border); transform: translateY(-2px); }
-        .btn-wa { color: #16a34a; border-color: #86efac; background: rgba(22, 163, 74, 0.1); }
-        .btn-wa:hover { background: rgba(22, 163, 74, 0.2); }
-
-        /* --- POPUP --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); z-index: 9999; display: none; justify-content: center; align-items: center; }
-        .modal-box { background: var(--modal-bg); padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); animation: popUp 0.3s ease-out; border: 1px solid var(--border); }
-        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        /* --- MOBILE --- */
-        @media (max-width: 900px) {
-            .main-layout { grid-template-columns: 1fr; margin: 20px auto; padding: 10px; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .chart-full { grid-column: span 1; }
-        }
-
-        /* --- PDF NASCOSTO (Sempre Stile Light per stampa) --- */
-        #pdf-template { 
-            position: absolute; left: -9999px; top: 0; width: 210mm; 
-            background: white !important; 
-            color: #333 !important;
-            padding: 20mm; font-family: Helvetica, sans-serif; 
-        }
-        .pdf-header { text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
-        .pdf-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #ddd; padding: 8px 0; font-size: 14px; color: #333; }
-        .pdf-box { flex:1; background:#f8fafc; padding:15px; border-radius:10px; border:1px solid #e2e8f0; }
-        .pdf-title { color: #333; border-bottom:2px solid #2563eb; }
+        /* RESULTS */
+        .verdict-box { text-align: center; padding: 15px; border-radius: 12px; font-weight: 700; margin-bottom: 20px; }
+        .win-green { background: rgba(16,185,129,0.15); color: #047857; border: 1px solid #10b981; }
+        .win-red { background: rgba(239,68,68,0.15); color: #b91c1c; border: 1px solid #ef4444; }
+        #pdf-template { position: absolute; left: -9999px; background: white; padding: 40px; width: 210mm; color: black; }
     </style>
 </head>
 <body>
 
-    <div id="welcomeModal" class="modal-overlay">
-        <div class="modal-box">
-            <i class="fa-solid fa-hand-wave" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px;"></i>
-            <h2 style="margin-top:0; justify-content:center;">Ciao!</h2>
-            <p style="color:var(--text-muted);">Come ti chiami? Personalizzeremo i calcoli per te.</p>
-            <div class="input-wrapper" style="margin-bottom: 20px;">
-                <input type="text" id="modalName" placeholder="Il tuo nome..." style="text-align:center; padding-left:15px;">
-            </div>
-            <button class="btn-main" onclick="saveName()">Inizia</button>
+    <div id="auth-overlay">
+        <div class="auth-box">
+            <i class="fa-solid fa-train-subway" style="font-size:3rem; color:var(--accent); margin-bottom:15px;"></i>
+            <h2 style="margin:0 0 10px 0;">pendolareApp.it</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Login per Community e AI.</p>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button class="btn-main" onclick="login()" style="width:100%">Accedi</button>
+            <button class="btn-main" style="background:transparent; border:1px solid var(--border); color:var(--text-main); margin-top:10px; width:100%" onclick="register()">Registrati</button>
+            <p id="auth-error" style="color:#ef4444; font-size:0.8rem; margin-top:10px;"></p>
         </div>
     </div>
 
     <nav class="navbar">
         <div class="logo">
-            <i class="fa-solid fa-train-subway"></i> PendolareSmart<span style="color:var(--text-muted); font-size:0.8em">.it</span>
+            <button class="btn-icon" onclick="toggleMenu()" style="border:none; margin-right:5px;"><i class="fa-solid fa-bars"></i></button>
+            pendolareApp<span style="opacity:0.6; font-size:0.7em;">.it</span>
         </div>
-        <div class="nav-actions">
-            <button class="btn-icon" onclick="toggleTheme()" title="Cambia Tema">
-                <i class="fa-solid fa-moon" id="themeIcon"></i>
-            </button>
-            <span id="greeting" style="font-weight:600; display:none; color:var(--text-main);">Ciao</span>
-            <button class="btn-icon logout-btn" onclick="logout()" title="Esci"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span id="user-display" style="font-size:0.8rem; font-weight:600; display:none;">User</span>
+            <button class="btn-icon" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
         </div>
     </nav>
 
-    <div class="main-layout">
+    <div class="menu-overlay" onclick="toggleMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-item active" onclick="nav('home')"><i class="fa-solid fa-calculator"></i> Calcolatore</div>
+        <div class="menu-item" onclick="nav('ai')"><i class="fa-solid fa-robot"></i> AI Treni & Foto</div>
+        <div class="menu-item" onclick="nav('community')"><i class="fa-solid fa-users"></i> Community</div>
+        <div class="menu-item" onclick="nav('about')"><i class="fa-solid fa-circle-info"></i> Chi Siamo</div>
+        <div style="margin-top:auto; padding-top:10px; border-top:1px solid var(--border);">
+            <div class="menu-item" onclick="logout()" style="color:#ef4444;"><i class="fa-solid fa-right-from-bracket"></i> Esci</div>
+        </div>
+    </div>
+
+    <div class="container">
         
-        <div class="card">
-            <h2><i class="fa-solid fa-sliders"></i> Configura Tratta</h2>
-            
-            <div class="form-group" style="background: var(--bg-input); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
-                <label style="color:var(--accent);">1. Dove lavori/studi? (Destinazione)</label>
-                <select id="hubCity" onchange="updateOrigins()" style="margin-bottom: 15px; background: var(--bg-card);">
-                    <option value="" disabled selected>-- Seleziona Città --</option>
-                    <option value="milano">Milano</option>
-                    <option value="roma">Roma</option>
-                    <option value="bologna">Bologna</option>
-                    <option value="torino">Torino</option>
-                    <option value="napoli">Napoli</option>
-                    <option value="firenze">Firenze</option>
-                    <option value="venezia">Venezia</option>
-                    <option value="bari">Bari</option>
-                </select>
-
-                <label style="color:var(--accent);">2. Da dove parti? (Origine)</label>
-                <select id="originCity" onchange="fillData()" disabled style="background: var(--border); opacity: 0.7;">
-                    <option value="">-- Scegli prima la destinazione --</option>
-                </select>
-            </div>
-
-            <hr style="border:0; border-top:1px solid var(--border); margin: 25px 0;">
-
-            <div class="form-group">
-                <label>Affitto a Destinazione (€/mese)</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">€</span>
-                    <input type="number" id="rentCity" placeholder="Es. 1200">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Affitto Pendolare/Casa (€/mese)</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">€</span>
-                    <input type="number" id="rentHome" placeholder="Es. 600">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Costo Viaggio Mensile (Treno/Auto)</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">€</span>
-                    <input type="number" id="transportCost" placeholder="Auto-compilato">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Tempo Totale A+R (Minuti) <span id="timeDisplay" style="float:right; color:var(--accent)">90 min</span></label>
-                <input type="range" id="travelTime" min="0" max="300" step="5" value="90" oninput="document.getElementById('timeDisplay').innerText = this.value + ' min'">
-            </div>
-
-            <div class="form-group">
-                <label>Valore del tuo tempo (€/ora)</label>
-                <div class="input-wrapper">
-                    <span class="currency-symbol">€</span>
-                    <input type="number" id="hourlyValue" value="10">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="smart-working-box">
-                    <input type="checkbox" id="smartWorking">
-                    <div>
-                        <strong style="display:block; color:var(--text-main);">Smart Working in viaggio</strong>
-                        <span style="font-size:0.85rem; color:var(--text-muted);">Lavoro/studio in treno (Dimezza costo tempo)</span>
+        <div id="home" class="section-view active">
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="margin-top:0;"><i class="fa-solid fa-sliders"></i> Dati Viaggio</h3>
+                    <div class="grid-2">
+                        <div>
+                            <label>Lavoro (Capoluogo)</label>
+                            <select id="hubCity" onchange="updateOrigins()"><option value="" disabled selected>-- Scegli --</option></select>
+                        </div>
+                        <div>
+                            <label>Casa (Provincia)</label>
+                            <select id="originCity" onchange="fillData()" disabled><option>-- Prima Hub --</option></select>
+                        </div>
                     </div>
-                </label>
-            </div>
+                    <hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;">
+                    <div class="grid-2">
+                        <div><label>Affitto Città (€)</label><input type="number" id="rentCity"></div>
+                        <div><label>Affitto Casa (€)</label><input type="number" id="rentHome"></div>
+                        <div><label>Costo Viaggio (€)</label><input type="number" id="transportCost"></div>
+                        <div><label>Valore Tempo (€/h)</label><input type="number" id="hourlyValue" value="10"></div>
+                    </div>
+                    <label style="margin-top:10px;">Tempo A+R: <span id="tVal" style="color:var(--accent)">90</span> min</label>
+                    <input type="range" id="travelTime" min="0" max="300" step="5" value="90" oninput="document.getElementById('tVal').innerText=this.value">
+                    <div style="background:var(--bg-input); padding:10px; border-radius:8px; display:flex; align-items:center; gap:10px; margin-top:10px;">
+                        <input type="checkbox" id="smartWorking" style="width:20px; margin:0;">
+                        <span style="font-size:0.9rem;">Smart Working in treno (-50% costo)</span>
+                    </div>
+                    <button class="btn-main" onclick="calculate()" style="width:100%">Calcola Risparmio</button>
+                </div>
 
-            <button class="btn-main" onclick="calculate()">
-                <i class="fa-solid fa-calculator"></i> Calcola Ora
-            </button>
+                <div id="resultsArea" class="card" style="display:none; text-align:center;">
+                    <div id="verdictBox" class="verdict-box"></div>
+                    
+                    <div style="display:flex; justify-content:space-around; margin-bottom:20px;">
+                        <div style="width:45%;"><h5>Città</h5><canvas id="cityChart"></canvas></div>
+                        <div style="width:45%;"><h5>Pendolare</h5><canvas id="homeChart"></canvas></div>
+                    </div>
+                    
+                    <h5>Proiezione 5 Anni</h5>
+                    <div style="height:150px;"><canvas id="lineChart"></canvas></div>
+                    
+                    <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
+                        <button class="btn-main" style="background:#ef4444; width:auto;" onclick="makePDF()">
+                            <i class="fa-solid fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn-main btn-wa" style="width:auto;" onclick="shareWa()">
+                            <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="card" id="resultsArea">
-            <div id="verdictBox" class="verdict-box" style="border: 2px dashed var(--border); padding: 40px; color: var(--text-muted);">
-                <i class="fa-solid fa-chart-simple" style="font-size: 3rem; margin-bottom: 10px;"></i>
-                <p>Inserisci i dati e premi Calcola per vedere i risultati.</p>
+        <div id="ai" class="section-view">
+            <div class="card" style="max-width:800px; margin:0 auto;">
+                <h3 style="margin-top:0;"><i class="fa-solid fa-brain"></i> AI Geografica</h3>
+                <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">
+                    Calcolo orari e prezzi tra <strong>tutte le province italiane</strong> basandomi sulla distanza reale.<br>
+                    Esempio: "Treno Torino Padova" o "Treno Riccione Bologna".
+                </p>
+
+                <div class="chat-area" id="chatBox">
+                    <div class="msg msg-bot">Ciao! Dimmi da dove parti e dove arrivi. 🚆</div>
+                </div>
+
+                <video id="camera-preview" autoplay playsinline></video>
+                <button id="snapBtn" class="btn-main" style="display:none; background:red; margin-bottom:10px; width:100%" onclick="takePhoto()">SCATTA</button>
+
+                <div class="ai-tools">
+                    <button class="tool-btn" onclick="startCamera()"><i class="fa-solid fa-camera"></i></button>
+                    <label for="fileInput" class="tool-btn" style="margin:0; cursor:pointer;"><i class="fa-solid fa-image"></i></label>
+                    <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleFileUpload(this)">
+                    
+                    <input type="text" id="aiInput" style="margin:0; border:none; background:transparent; flex:1;" placeholder="Scrivi qui..." onkeypress="if(event.key==='Enter') sendAi()">
+                    <button class="tool-btn" style="color:var(--accent);" onclick="sendAi()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
             </div>
+        </div>
 
-            <div id="chartsArea" style="display:none;">
-                <div class="charts-grid">
-                    <div class="chart-box">
-                        <h4>Città</h4>
-                        <canvas id="cityChart"></canvas>
-                    </div>
-                    <div class="chart-box">
-                        <h4>Pendolare</h4>
-                        <canvas id="homeChart"></canvas>
-                    </div>
+        <div id="community" class="section-view">
+            <div class="card" style="max-width:800px; margin:0 auto;">
+                <h3 style="margin-top:0;"><i class="fa-solid fa-comments"></i> Community Live</h3>
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <input type="text" id="postInput" placeholder="Messaggio..." style="margin:0;">
+                    <button class="btn-main" style="width:auto; margin:0; padding:0 25px;" onclick="sendPost()">Invia</button>
                 </div>
-                
-                <div class="chart-box chart-full" style="margin-bottom: 20px;">
-                    <h4>Proiezione Risparmio (5 Anni)</h4>
-                    <canvas id="lineChart" height="200"></canvas>
-                </div>
+                <div id="feed"><div style="text-align:center; padding:20px; color:gray;">Caricamento...</div></div>
+            </div>
+        </div>
 
-                <div class="actions">
-                    <button class="btn-action btn-wa" onclick="shareWa()"><i class="fa-brands fa-whatsapp"></i> Condividi</button>
-                    <button class="btn-action" onclick="makePDF()"><i class="fa-solid fa-file-pdf"></i> Scarica PDF</button>
+        <div id="about" class="section-view">
+            <div class="card">
+                <h2 style="color:var(--accent);">Chi Siamo?</h2>
+                <div style="line-height:1.7;">
+                   <strong>pendolareApp.it</strong> nasce per rispondere alla domanda che ogni lavoratore o studente si pone: 
+                    <em>"Mi conviene fare il pendolare o trasferirmi?"</em>.<br><br>
+                    Il nostro algoritmo unico analizza non solo i costi di biglietti e affitti, ma anche il <strong>valore del tuo tempo</strong> e lo stress del viaggio.
+                    Grazie alla nostra <strong>AI</strong>, possiamo calcolare istantaneamente la fattibilità di qualsiasi tratta italiana.<br><br>
+                    Unisciti alla nostra community per scambiare consigli reali con chi vive la tua stessa esperienza.
                 </div>
             </div>
         </div>
     </div>
 
     <div id="pdf-template">
-        <div class="pdf-header">
-            <h1 style="color:#2563eb; margin:0;">Report Pendolare</h1>
-            <p style="color:#666;">Generato per <span id="pdfUser"></span> il <span id="pdfDate"></span></p>
-        </div>
-        
-        <div id="pdfVerdict" style="text-align:center; padding:20px; border-radius:10px; margin-bottom:30px; font-weight:bold; font-size:18px; border: 1px solid #ccc;"></div>
-
-        <div style="display:flex; gap:30px;">
-            <div class="pdf-box">
-                <h3 class="pdf-title">🏠 Città</h3>
-                <div class="pdf-row"><span>Affitto:</span><strong id="pdfRentCity"></strong></div>
-                <div class="pdf-row" style="font-size:16px; border-top:2px solid #333; margin-top:10px; color:#000;"><span>TOTALE:</span><strong id="pdfTotCity"></strong></div>
-            </div>
-            <div class="pdf-box">
-                <h3 class="pdf-title">🚆 Pendolare</h3>
-                <div class="pdf-row"><span>Affitto:</span><strong id="pdfRentHome"></strong></div>
-                <div class="pdf-row"><span>Viaggio:</span><strong id="pdfTrans"></strong></div>
-                <div class="pdf-row"><span>Tempo Perso:</span><strong id="pdfTime"></strong></div>
-                <div class="pdf-row" style="font-size:16px; border-top:2px solid #333; margin-top:10px; color:#000;"><span>TOTALE:</span><strong id="pdfTotHome"></strong></div>
-            </div>
-        </div>
-
-        <div style="text-align:center; margin-top:30px;">
-            <h4>Proiezione 5 Anni</h4>
-            <img id="pdfChartImg" style="width:100%; max-width:600px;">
-        </div>
+        <h1 style="color:#2563eb;">Report pendolareApp.it</h1>
+        <div id="pdf-content"></div>
+        <img id="pdf-img" style="width:100%; margin-top:30px;">
     </div>
 
 <script>
-    // --- DATABASE TRATTE (HUB -> PROVINCE) ---
-    const database = {
-        "milano": {
-            rent: 1350,
-            destinations: [
-                {name: "Monza", rent: 850, cost: 40, time: 30},
-                {name: "Pavia", rent: 700, cost: 60, time: 60},
-                {name: "Como", rent: 750, cost: 70, time: 90},
-                {name: "Bergamo", rent: 700, cost: 65, time: 100},
-                {name: "Varese", rent: 700, cost: 75, time: 110},
-                {name: "Lodi", rent: 650, cost: 55, time: 60},
-                {name: "Novara", rent: 600, cost: 75, time: 90},
-                {name: "Brescia", rent: 650, cost: 105, time: 120},
-                {name: "Piacenza", rent: 550, cost: 85, time: 100},
-                {name: "Lecco", rent: 650, cost: 70, time: 100},
-                {name: "Cremona", rent: 550, cost: 85, time: 130}
-            ]
-        },
-        "roma": {
-            rent: 1150,
-            destinations: [
-                {name: "Latina", rent: 600, cost: 60, time: 90},
-                {name: "Viterbo", rent: 500, cost: 70, time: 150},
-                {name: "Frosinone", rent: 500, cost: 75, time: 130},
-                {name: "Tivoli", rent: 600, cost: 45, time: 70},
-                {name: "Civitavecchia", rent: 650, cost: 70, time: 110},
-                {name: "Guidonia", rent: 550, cost: 45, time: 60},
-                {name: "Anzio/Nettuno", rent: 550, cost: 55, time: 130},
-                {name: "Orte", rent: 450, cost: 75, time: 90}
-            ]
-        },
-        "bologna": {
-            rent: 950,
-            destinations: [
-                {name: "Modena", rent: 700, cost: 55, time: 50},
-                {name: "Ferrara", rent: 600, cost: 60, time: 60},
-                {name: "Parma", rent: 600, cost: 75, time: 110},
-                {name: "Ravenna", rent: 550, cost: 80, time: 140},
-                {name: "Forlì-Cesena", rent: 500, cost: 70, time: 80},
-                {name: "Rimini", rent: 650, cost: 110, time: 120},
-                {name: "Imola", rent: 600, cost: 50, time: 40}
-            ]
-        },
-        "torino": {
-            rent: 800,
-            destinations: [
-                {name: "Asti", rent: 500, cost: 70, time: 70},
-                {name: "Alessandria", rent: 450, cost: 85, time: 100},
-                {name: "Cuneo", rent: 500, cost: 80, time: 130},
-                {name: "Novara", rent: 600, cost: 85, time: 90},
-                {name: "Ivrea", rent: 500, cost: 65, time: 100},
-                {name: "Vercelli", rent: 450, cost: 75, time: 90}
-            ]
-        },
-        "napoli": {
-            rent: 900,
-            destinations: [
-                {name: "Caserta", rent: 550, cost: 50, time: 60},
-                {name: "Salerno", rent: 650, cost: 65, time: 80},
-                {name: "Benevento", rent: 500, cost: 75, time: 160},
-                {name: "Avellino", rent: 500, cost: 65, time: 110},
-                {name: "Formia", rent: 550, cost: 80, time: 120}
-            ]
-        },
-        "firenze": {
-            rent: 1000,
-            destinations: [
-                {name: "Prato", rent: 700, cost: 40, time: 40},
-                {name: "Pistoia", rent: 650, cost: 55, time: 70},
-                {name: "Pisa", rent: 700, cost: 80, time: 120},
-                {name: "Arezzo", rent: 600, cost: 85, time: 100},
-                {name: "Siena", rent: 650, cost: 90, time: 160}
-            ]
-        },
-        "venezia": {
-            rent: 900,
-            destinations: [
-                {name: "Padova", rent: 650, cost: 55, time: 50},
-                {name: "Treviso", rent: 650, cost: 55, time: 60},
-                {name: "Vicenza", rent: 600, cost: 70, time: 80},
-                {name: "Verona", rent: 700, cost: 95, time: 130}
-            ]
-        },
-        "bari": {
-            rent: 700,
-            destinations: [
-                {name: "Foggia", rent: 450, cost: 90, time: 150},
-                {name: "Barletta-Trani", rent: 500, cost: 60, time: 80},
-                {name: "Brindisi", rent: 500, cost: 85, time: 110},
-                {name: "Lecce", rent: 550, cost: 100, time: 170}
-            ]
-        }
+    // ---------------------------------------------------------
+    // 1. CONFIGURAZIONE FIREBASE (INSERISCI LE TUE CHIAVI)
+    // ---------------------------------------------------------
+    const firebaseConfig = {
+       apiKey: "AIzaSyBp2f237xiMNFTRNbqAKu2Zmyw_wmppAJo",
+  authDomain: "pendolareapp.firebaseapp.com",
+  databaseURL: "https://pendolareapp-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "pendolareapp",
+  storageBucket: "pendolareapp.firebasestorage.app",
+  messagingSenderId: "520849252990",
+  appId: "1:520849252990:web:e2553a4098e270349b6e2f",
+  measurementId: "G-QG208D8JMJ"
     };
 
-    // --- LOGICA DOPPIO MENU ---
+    let auth, db;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.database();
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('user-display').innerText = user.email.split('@')[0];
+                document.getElementById('user-display').style.display = 'block';
+                listenForPosts();
+            } else { document.getElementById('auth-overlay').style.display = 'flex'; }
+        });
+    } catch(e){console.error(e);}
+
+    // AUTH
+    function register(){const e=document.getElementById('email').value,p=document.getElementById('password').value;auth.createUserWithEmailAndPassword(e,p).catch(err=>document.getElementById('auth-error').innerText=err.message);}
+    function login(){const e=document.getElementById('email').value,p=document.getElementById('password').value;auth.signInWithEmailAndPassword(e,p).catch(err=>document.getElementById('auth-error').innerText=err.message);}
+    function logout(){auth.signOut();location.reload();}
+
+    // UI
+    function toggleMenu(){const m=document.getElementById('sideMenu'),o=document.querySelector('.menu-overlay');if(m.classList.contains('open')){m.classList.remove('open');o.style.display='none';}else{m.classList.add('open');o.style.display='block';}}
+    function nav(id){document.querySelectorAll('.section-view').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');toggleMenu();}
+    function toggleTheme(){const b=document.body,t=b.getAttribute('data-theme')==='light'?'dark':'light';b.setAttribute('data-theme',t);localStorage.setItem('theme',t);}
+
+    // ---------------------------------------------------------
+    // 2. DATABASE E CALCOLATORE
+    // ---------------------------------------------------------
+    const geoDB = {
+        "agrigento":{x:55,y:5}, "alessandria":{x:25,y:80}, "ancona":{x:65,y:60}, "aosta":{x:10,y:90}, "arezzo":{x:50,y:60}, "ascoli piceno":{x:65,y:55}, "asti":{x:20,y:80}, "avellino":{x:65,y:35},
+        "bari":{x:85,y:35}, "barletta":{x:80,y:38}, "belluno":{x:65,y:90}, "benevento":{x:65,y:38}, "bergamo":{x:35,y:85}, "biella":{x:25,y:85}, "bologna":{x:50,y:70}, "bolzano":{x:55,y:95}, "brescia":{x:40,y:85}, "brindisi":{x:90,y:30},
+        "cagliari":{x:30,y:20}, "caltanissetta":{x:60,y:10}, "campobasso":{x:70,y:40}, "caserta":{x:60,y:35}, "catania":{x:70,y:10}, "catanzaro":{x:80,y:15}, "cesena":{x:56,y:68}, "chieti":{x:70,y:50}, "como":{x:30,y:88}, "cosenza":{x:78,y:20}, "cremona":{x:38,y:78}, "crotone":{x:85,y:15}, "cuneo":{x:15,y:75},
+        "enna":{x:65,y:12}, "fermo":{x:66,y:54}, "ferrara":{x:55,y:72}, "firenze":{x:48,y:62}, "foggia":{x:75,y:40}, "forlì":{x:55,y:68}, "frosinone":{x:55,y:45},
+        "genova":{x:30,y:75}, "gorizia":{x:75,y:85}, "grosseto":{x:45,y:50},
+        "imperia":{x:20,y:70}, "isernia":{x:65,y:42},
+        "la spezia":{x:35,y:70}, "l'aquila":{x:60,y:50}, "latina":{x:55,y:42}, "lecce":{x:95,y:25}, "lecco":{x:35,y:88}, "livorno":{x:40,y:60}, "lodi":{x:35,y:80}, "lucca":{x:42,y:65},
+        "macerata":{x:65,y:58}, "mantova":{x:45,y:78}, "massa":{x:38,y:68}, "matera":{x:80,y:32}, "messina":{x:75,y:18}, "milano":{x:32,y:82}, "modena":{x:48,y:72}, "monza":{x:32,y:83},
+        "napoli":{x:60,y:35}, "novara":{x:25,y:83}, "nuoro":{x:35,y:25},
+        "oristano":{x:30,y:25},
+        "padova":{x:60,y:80}, "palermo":{x:55,y:15}, "parma":{x:42,y:75}, "pavia":{x:30,y:78}, "perugia":{x:55,y:55}, "pesaro":{x:60,y:65}, "pescara":{x:70,y:52}, "piacenza":{x:38,y:78}, "pisa":{x:40,y:62}, "pistoia":{x:45,y:64}, "pordenone":{x:70,y:85}, "potenza":{x:75,y:30}, "prato":{x:47,y:63},
+        "ragusa":{x:65,y:5}, "ravenna":{x:58,y:70}, "reggio calabria":{x:75,y:10}, "reggio emilia":{x:45,y:74}, "rieti":{x:58,y:50}, "rimini":{x:60,y:65}, "roma":{x:52,y:48}, "rovigo":{x:60,y:75},
+        "salerno":{x:65,y:32}, "sassari":{x:30,y:30}, "savona":{x:25,y:72}, "siena":{x:50,y:55}, "siracusa":{x:70,y:8}, "sondrio":{x:40,y:92},
+        "taranto":{x:85,y:30}, "teramo":{x:65,y:52}, "terni":{x:55,y:52}, "torino":{x:20,y:82}, "trapani":{x:50,y:12}, "trento":{x:50,y:90}, "treviso":{x:65,y:85}, "trieste":{x:78,y:85},
+        "udine":{x:72,y:88},
+        "varese":{x:28,y:88}, "venezia":{x:65,y:80}, "verbania":{x:25,y:90}, "vercelli":{x:25,y:82}, "verona":{x:50,y:82}, "vibo valentia":{x:78,y:18}, "vicenza":{x:58,y:82}, "viterbo":{x:52,y:52},
+        // AGGIUNTE EXTRA
+        "riccione": {x:60.2, y:64.8}, "gallipoli":{x:94,y:24}, "sanremo":{x:19,y:69}
+    };
+
+    const regions = {
+        "Lombardia": ["Milano","Bergamo","Brescia","Como","Cremona","Lecco","Lodi","Mantova","Monza","Pavia","Sondrio","Varese"],
+        "Lazio": ["Roma","Frosinone","Latina","Rieti","Viterbo"],
+        "Campania": ["Napoli","Avellino","Benevento","Caserta","Salerno"],
+        "Emilia-Romagna": ["Bologna","Ferrara","Forlì","Cesena","Modena","Parma","Piacenza","Ravenna","Reggio Emilia","Rimini"],
+        "Piemonte": ["Torino","Alessandria","Asti","Biella","Cuneo","Novara","Verbania","Vercelli"],
+        "Veneto": ["Venezia","Belluno","Padova","Rovigo","Treviso","Verona","Vicenza"],
+        "Toscana": ["Firenze","Arezzo","Grosseto","Livorno","Lucca","Massa","Pisa","Pistoia","Prato","Siena"],
+        "Puglia": ["Bari","Barletta","Brindisi","Foggia","Lecce","Taranto"],
+        "Sicilia": ["Palermo","Agrigento","Caltanissetta","Catania","Enna","Messina","Ragusa","Siracusa","Trapani"],
+        "Sardegna": ["Cagliari","Nuoro","Oristano","Sassari"],
+        "Liguria": ["Genova","Imperia","La Spezia","Savona"],
+        "Marche": ["Ancona","Ascoli Piceno","Fermo","Macerata","Pesaro"],
+        "Abruzzo": ["L'Aquila","Chieti","Pescara","Teramo"],
+        "Friuli V.G.": ["Trieste","Gorizia","Pordenone","Udine"],
+        "Trentino": ["Trento","Bolzano"],
+        "Umbria": ["Perugia","Terni"],
+        "Basilicata": ["Potenza","Matera"],
+        "Calabria": ["Catanzaro","Cosenza","Crotone","Reggio Calabria","Vibo Valentia"],
+        "Molise": ["Campobasso","Isernia"],
+        "Valle d'Aosta": ["Aosta"]
+    };
+
+    window.onload = () => {
+        const h = document.getElementById('hubCity');
+        for(let r in regions){ let g=document.createElement('optgroup'); g.label=r; regions[r].forEach(c=>{ let o=document.createElement('option'); o.value=c; o.text=c; g.appendChild(o); }); h.appendChild(g); }
+    };
+
     function updateOrigins() {
-        const hub = document.getElementById('hubCity').value;
-        const originSelect = document.getElementById('originCity');
-        const rentCityInput = document.getElementById('rentCity');
-
-        originSelect.innerHTML = '<option value="">-- Scegli Città Partenza --</option>';
-        originSelect.disabled = true;
-        originSelect.style.background = "var(--border)";
-        originSelect.style.opacity = "0.7";
-
-        if (database[hub]) {
-            rentCityInput.value = database[hub].rent;
-            originSelect.disabled = false;
-            originSelect.style.background = "var(--bg-card)";
-            originSelect.style.opacity = "1";
-            
-            database[hub].destinations.forEach((city, index) => {
-                let option = document.createElement("option");
-                option.value = index; 
-                option.text = city.name;
-                originSelect.add(option);
-            });
-        }
+        const h = document.getElementById('hubCity').value;
+        const o = document.getElementById('originCity');
+        o.innerHTML='<option value="">-- Seleziona --</option>'; o.disabled=false;
+        for(let r in regions){ let g=document.createElement('optgroup'); g.label=r; regions[r].forEach(c=>{ if(c!==h){ let op=document.createElement('option'); op.value=c; op.text=c; g.appendChild(op); }}); o.appendChild(g); }
+        document.getElementById('rentCity').value = 800;
     }
 
     function fillData() {
-        const hub = document.getElementById('hubCity').value;
-        const index = document.getElementById('originCity').value;
-        
-        if (hub && index !== "") {
-            const data = database[hub].destinations[index];
-            document.getElementById('rentHome').value = data.rent;
-            document.getElementById('transportCost').value = data.cost;
-            document.getElementById('travelTime').value = data.time;
-            document.getElementById('timeDisplay').innerText = data.time + " min";
-            
-            // Flash effect
-            const el = document.getElementById('rentHome');
-            const originalBg = el.style.backgroundColor;
-            el.style.backgroundColor = "var(--highlight-bg)";
-            setTimeout(() => el.style.backgroundColor = originalBg, 500);
+        const h = document.getElementById('hubCity').value.toLowerCase();
+        const o = document.getElementById('originCity').value.toLowerCase();
+        if(geoDB[h] && geoDB[o]) {
+            const dist = Math.sqrt(Math.pow(geoDB[h].x - geoDB[o].x, 2) + Math.pow(geoDB[h].y - geoDB[o].y, 2));
+            const cost = Math.max(30, Math.round(dist * 3)); 
+            const time = Math.max(20, Math.round(dist * 2.5));
+            document.getElementById('rentHome').value = 500;
+            document.getElementById('transportCost').value = cost;
+            document.getElementById('travelTime').value = time;
+            document.getElementById('tVal').innerText = time;
         }
     }
 
-    // --- LOGICA UTENTE & TEMA ---
-    window.onload = () => {
-        // Gestione Nome
-        const name = localStorage.getItem('userName');
-        if(!name) document.getElementById('welcomeModal').style.display = 'flex';
-        else {
-            document.getElementById('greeting').innerText = "Ciao, " + name;
-            document.getElementById('greeting').style.display = "block";
-        }
-
-        // Gestione Tema
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.body.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-        updateChartDefaults(savedTheme);
-    };
-
-    function toggleTheme() {
-        const current = document.body.getAttribute('data-theme');
-        const next = current === 'light' ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        updateThemeIcon(next);
-        updateChartDefaults(next);
-        if(c1) calculate(); // Ridisegna grafici se esistono
-    }
-
-    function updateThemeIcon(theme) {
-        const icon = document.getElementById('themeIcon');
-        if(theme === 'dark') {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-        }
-    }
-
-    function updateChartDefaults(theme) {
-        const textColor = theme === 'dark' ? '#94a3b8' : '#0f172a';
-        Chart.defaults.color = textColor;
-        Chart.defaults.borderColor = theme === 'dark' ? '#334155' : '#e2e8f0';
-    }
-
-    function saveName() {
-        const val = document.getElementById('modalName').value;
-        if(val) {
-            localStorage.setItem('userName', val);
-            document.getElementById('greeting').innerText = "Ciao, " + val;
-            document.getElementById('greeting').style.display = "block";
-            document.getElementById('welcomeModal').style.display = 'none';
-        }
-    }
-
-    function logout() {
-        if(confirm("Vuoi uscire?")) {
-            localStorage.removeItem('userName');
-            location.reload();
-        }
-    }
-
-    // --- CALCOLO E GRAFICI ---
     let c1, c2, c3;
     let globalData = {};
 
     function calculate() {
-        const rC = parseFloat(document.getElementById('rentCity').value)||0;
-        const rH = parseFloat(document.getElementById('rentHome').value)||0;
-        const tr = parseFloat(document.getElementById('transportCost').value)||0;
-        const min = parseFloat(document.getElementById('travelTime').value)||0;
-        const hour = parseFloat(document.getElementById('hourlyValue').value)||0;
+        const rC = Number(document.getElementById('rentCity').value);
+        const rH = Number(document.getElementById('rentHome').value);
+        const tr = Number(document.getElementById('transportCost').value);
+        const min = Number(document.getElementById('travelTime').value);
+        const val = Number(document.getElementById('hourlyValue').value);
         const isSmart = document.getElementById('smartWorking').checked;
 
-        const timeCost = (min/60) * 20 * hour * (isSmart ? 0.5 : 1);
+        const timeCost = (min/60) * 20 * val * (isSmart ? 0.5 : 1);
         const totC = rC;
         const totH = rH + tr + timeCost;
         const diff = totC - totH;
+        
+        globalData = { rC, totC, rH, tr, timeCost, totH, diff };
 
         document.getElementById('resultsArea').style.display = 'block';
-        document.getElementById('chartsArea').style.display = 'block';
-        
-        const box = document.getElementById('verdictBox');
-        const fmt = n => n.toLocaleString('it-IT', {style:'currency', currency:'EUR', maximumFractionDigits:0});
-
-        if(diff > 0) {
-            box.className = "verdict-box win-green";
-            box.innerHTML = `<h2>✅ CONVIENE IL PENDOLARE</h2><span class="big-number">Risparmi ${fmt(diff)}/mese</span>(Compreso il valore del tempo)`;
-        } else {
-            box.className = "verdict-box win-red";
-            box.innerHTML = `<h2>🛑 CONVIENE LA CITTÀ</h2><span class="big-number">Risparmi ${fmt(Math.abs(diff))}/mese</span>(Vivere fuori ti costa troppo tempo)`;
+        const v = document.getElementById('verdictBox');
+        if(diff > 0) { 
+            v.className = "verdict-box win-green"; 
+            v.innerHTML = `✅ CONVIENE IL PENDOLARE (Risparmi ${Math.round(diff)}€/mese)`; 
+        } else { 
+            v.className = "verdict-box win-red"; 
+            v.innerHTML = `🛑 CONVIENE LA CITTÀ (Risparmi ${Math.round(Math.abs(diff))}€/mese)`; 
         }
 
-        // Grafici
-        if(c1) c1.destroy(); if(c2) c2.destroy(); if(c3) c3.destroy();
-
-        // 1. Chart Città
-        c1 = new Chart(document.getElementById('cityChart'), {
-            type: 'doughnut', 
-            data: {labels:['Affitto'], datasets:[{data:[totC], backgroundColor:['#2563eb'], borderWidth: 0}]},
-            options: {
-                plugins:{ legend:{ display:false }, tooltip: { enabled: true } }
-            }
-        });
-
-        // 2. Chart Pendolare con Percentuali nella Legenda
-        c2 = new Chart(document.getElementById('homeChart'), {
-            type: 'doughnut', 
-            data: {
-                labels:['Affitto','Viaggio','Tempo'], 
-                datasets:[{
-                    data:[rH, tr, timeCost], 
-                    backgroundColor:['#2563eb','#10b981','#ef4444'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            generateLabels: (chart) => {
-                                const data = chart.data;
-                                if (data.labels.length && data.datasets.length) {
-                                    return data.labels.map((label, i) => {
-                                        const value = data.datasets[0].data[i];
-                                        const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((value / total) * 100).toFixed(0) + "%";
-                                        return {
-                                            text: `${label}: ${percentage}`, // AGGIUNTA PERCENTUALE QUI
-                                            fillStyle: data.datasets[0].backgroundColor[i],
-                                            hidden: isNaN(data.datasets[0].data[i]),
-                                            index: i
-                                        };
-                                    });
-                                }
-                                return [];
-                            }
+        // Configurazione Tooltip e Legenda con Percentuali
+        const chartOptions = {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            let val = ctx.raw;
+                            let tot = ctx.chart._metasets[ctx.datasetIndex].total;
+                            return ctx.label + ": " + Math.round(val) + "€ (" + (val/tot*100).toFixed(1) + "%)";
+                        }
+                    }
+                },
+                legend: {
+                    display: true, position: 'bottom',
+                    labels: {
+                        usePointStyle: true, padding: 20,
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, i) => {
+                                    const meta = chart.getDatasetMeta(0);
+                                    const style = meta.controller.getStyle(i);
+                                    const value = data.datasets[0].data[i];
+                                    const total = data.datasets[0].data.reduce((a,b)=>a+b,0);
+                                    const percentage = (value/total*100).toFixed(1)+"%";
+                                    return { text: `${label} (${percentage})`, fillStyle: style.backgroundColor, strokeStyle: style.borderColor, lineWidth: style.borderWidth, hidden: !chart.getDataVisibility(i), index: i };
+                                });
+                            } return [];
                         }
                     }
                 }
             }
-        });
-
-        const yearly = diff * 12;
-        c3 = new Chart(document.getElementById('lineChart'), {
-            type: 'line',
-            data: {
-                labels: ['Anno 1','Anno 2','Anno 3','Anno 4','Anno 5'],
-                datasets: [{
-                    label: 'Risparmio Cumulativo',
-                    data: [yearly, yearly*2, yearly*3, yearly*4, yearly*5],
-                    borderColor: '#2563eb', fill: true, backgroundColor: 'rgba(37,99,235,0.1)'
-                }]
-            },
-            options: {
-                plugins: { legend: { display: false } }
-            }
-        });
-
-        globalData = { rC, totC, rH, tr, timeCost, totH, diff };
-        document.getElementById('resultsArea').scrollIntoView({behavior:'smooth'});
-    }
-
-    // --- PDF GENERATOR ---
-    function makePDF() {
-        if(!globalData.totC) return;
-        const fmt = n => n.toLocaleString('it-IT', {style:'currency', currency:'EUR'});
-        
-        document.getElementById('pdfUser').innerText = localStorage.getItem('userName') || "Utente";
-        document.getElementById('pdfDate').innerText = new Date().toLocaleDateString();
-        
-        document.getElementById('pdfRentCity').innerText = fmt(globalData.rC);
-        document.getElementById('pdfTotCity').innerText = fmt(globalData.totC);
-        document.getElementById('pdfRentHome').innerText = fmt(globalData.rH);
-        document.getElementById('pdfTrans').innerText = fmt(globalData.tr);
-        document.getElementById('pdfTime').innerText = fmt(globalData.timeCost);
-        document.getElementById('pdfTotHome').innerText = fmt(globalData.totH);
-
-        const v = document.getElementById('pdfVerdict');
-        if (globalData.diff > 0) {
-            v.innerText = `CONSIGLIO: PENDOLARE (Risparmi ${fmt(globalData.diff)} al mese)`;
-            v.style.backgroundColor = "#ecfdf5"; v.style.color = "#065f46";
-        } else {
-            v.innerText = `CONSIGLIO: CITTÀ (Risparmi ${fmt(Math.abs(globalData.diff))} al mese)`;
-            v.style.backgroundColor = "#fef2f2"; v.style.color = "#991b1b";
-        }
-
-        document.getElementById('pdfChartImg').src = c3.toBase64Image();
-
-        const el = document.getElementById('pdf-template');
-        const opt = {
-            margin: 0,
-            filename: 'Report_Pendolare.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().set(opt).from(el).save();
+        if(c1) c1.destroy(); if(c2) c2.destroy(); if(c3) c3.destroy();
+        c1 = new Chart(document.getElementById('cityChart'), { type: 'doughnut', data: { labels: ['Affitto'], datasets: [{data: [totC], backgroundColor: ['#2563eb']}] }, options: chartOptions });
+        c2 = new Chart(document.getElementById('homeChart'), { type: 'doughnut', data: { labels: ['Affitto', 'Viaggio', 'Tempo'], datasets: [{data: [rH, tr, timeCost], backgroundColor: ['#2563eb', '#10b981', '#ef4444']}] }, options: chartOptions });
+        c3 = new Chart(document.getElementById('lineChart'), { type: 'line', data: { labels: ['1', '2', '3', '4', '5'], datasets: [{ label: 'Risparmio Cumulativo', data: [diff*12, diff*24, diff*36, diff*48, diff*60], borderColor: '#2563eb', fill: true, backgroundColor: 'rgba(37,99,235,0.1)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+    }
+
+    function makePDF() {
+        const el = document.getElementById('pdf-template');
+        document.getElementById('pdf-content').innerHTML = document.getElementById('verdictBox').innerHTML;
+        document.getElementById('pdf-img').src = c3.toBase64Image();
+        html2pdf().from(el).save('Report.pdf');
     }
 
     function shareWa() {
-        const msg = `Ho calcolato il mio risparmio reale: ${Math.round(globalData.diff)}€ al mese! Calcola anche tu qui: ${window.location.href}`;
-        window.open('https://wa.me/?text='+encodeURIComponent(msg));
+        if(!globalData || typeof globalData.diff === 'undefined') return alert("Calcola prima!");
+        let msg = globalData.diff > 0 ? `✅ Risparmio ${Math.round(globalData.diff)}€ facendo il pendolare!` : `🛑 Meglio la città, risparmierei ${Math.round(Math.abs(globalData.diff))}€!`;
+        msg += " Calcola anche tu su pendolareApp.it";
+        window.open("https://wa.me/?text=" + encodeURIComponent(msg));
     }
-</script>
 
+    // --- AI TRENI ---
+    function sendAi() {
+        const inp = document.getElementById('aiInput'); const txt = inp.value.trim().toLowerCase(); if(!txt) return;
+        addMsg(inp.value, 'user'); inp.value = "";
+        const box = document.getElementById('chatBox'); box.scrollTop = box.scrollHeight;
+        setTimeout(() => processAi(txt), 800);
+    }
+
+    function processAi(txt) {
+        const cleanTxt = txt.replace(/vorrei andare/g,"").replace(/biglietto/g,"").replace(/treno/g,"").replace(/ per /g," ").replace(/ a /g," ").replace(/ da /g," ");
+        let found = [];
+        for(let city in geoDB) { if(cleanTxt.includes(city)) found.push(city); }
+        found = [...new Set(found)].sort((a,b)=>b.length-a.length);
+
+        if(found.length >= 2) {
+            const from = found[0]; const to = found[1];
+            const dist = Math.sqrt(Math.pow(geoDB[from].x - geoDB[to].x, 2) + Math.pow(geoDB[from].y - geoDB[to].y, 2));
+            
+            let price, time, type;
+            if(dist < 3) { price=(1.50+dist*0.5).toFixed(2); time=Math.round(5+dist*4)+" min"; type="Regionale"; }
+            else if(dist < 20) { price=(4.00+dist*0.8).toFixed(2); time=Math.round(25+dist*2.5)+" min"; type="Regionale Veloce"; }
+            else { price=(20.00+dist*1.6).toFixed(2); let mins=Math.round(50+dist*3.8); time=Math.floor(mins/60)+"h "+(mins%60)+"m"; type="Frecciarossa / Intercity"; }
+
+            const d = new Date(); d.setDate(d.getDate()+1);
+            const dateISO = d.toISOString().split('T')[0] + "T08:00:00";
+            const link = `https://www.lefrecce.it/Channels.Website.WEB/#/search-results?departureStation=${encodeURIComponent(capitalize(from))}&arrivalStation=${encodeURIComponent(capitalize(to))}&journeyDate=${dateISO}&searchType=solutions&adults=1&childs=0&travelClass=2&pax=1`;
+
+            const html = `
+                Tratta: <strong>${capitalize(from)} ➝ ${capitalize(to)}</strong><br><br>
+                ⏱️ <strong>Tempo:</strong> ${time}<br>
+                💶 <strong>Prezzo:</strong> ~${price}€<br>
+                🚆 <strong>Treno:</strong> ${type}<br><br>
+                <a href="${link}" target="_blank" style="background:#c0392b; color:white; padding:10px 15px; border-radius:8px; text-decoration:none; font-weight:bold; display:inline-block;">
+                    <i class="fa-solid fa-ticket"></i> Acquista su Trenitalia
+                </a>
+            `;
+            addMsg(html, 'bot');
+        } else { addMsg("Non ho capito le città. Prova: 'Treno Forlì Cesena' o 'Milano Roma'.", 'bot'); }
+    }
+
+    function addMsg(h, t) {
+        const b = document.getElementById('chatBox');
+        b.insertAdjacentHTML('beforeend', `<div class="msg msg-${t}">${h}</div>`);
+        b.scrollTop = b.scrollHeight;
+    }
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // CAMERA & COMMUNITY
+    let vs; async function startCamera(){try{const v=document.getElementById('camera-preview');vs=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});v.srcObject=vs;v.style.display="block";document.getElementById('snapBtn').style.display="block";}catch(e){alert("Errore: "+e);}}
+    function takePhoto(){const v=document.getElementById('camera-preview'),c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);addMsg(`<img src="${c.toDataURL('image/png')}" class="msg-img">`,'user');vs.getTracks().forEach(t=>t.stop());v.style.display="none";document.getElementById('snapBtn').style.display="none";setTimeout(()=>addMsg("Foto analizzata.",'bot'),1000);}
+    function handleFileUpload(i){const f=i.files[0];if(f){const r=new FileReader();r.onload=e=>{addMsg(`<img src="${e.target.result}" class="msg-img">`,'user');setTimeout(()=>addMsg("Analisi in corso...",'bot'),1000);};r.readAsDataURL(f);}}
+    function sendPost(){const t=document.getElementById('postInput').value;if(!t)return;const u=auth.currentUser?auth.currentUser.email.split('@')[0]:"Anonimo";db.ref('posts').push({u:u,t:t,d:Date.now()});document.getElementById('postInput').value="";}
+    function listenForPosts(){document.getElementById('feed').innerHTML="";db.ref('posts').limitToLast(15).on('child_added',s=>{const d=s.val(),date=new Date(d.d).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});document.getElementById('feed').insertAdjacentHTML('afterbegin',`<div class="post"><div class="post-header"><span class="post-user">${d.u}</span><span>${date}</span></div><div>${d.t}</div></div>`);});}
+</script>
 </body>
 </html>
